@@ -1,0 +1,5 @@
+.room-view { flex: 1; overflow-y: auto; min-height: 0; }
+.room-short { color: #e8d090; font-size: 15px; font-weight: bold; margin-bottom: 6px; }
+.room-long  { white-space: pre-wrap; color: #c0c0c0; font-size: 13px; line-height: 1.7; margin-bottom: 8px; font-family: var(--font); }
+.room-items { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.item-chip  { font-size: 12px; padding: 2px 8px; color: var(--yellow); border-color: var(--accent-dim); }

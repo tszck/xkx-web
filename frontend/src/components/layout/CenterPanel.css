@@ -1,0 +1,7 @@
+.center-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+  min-height: 0;
+}

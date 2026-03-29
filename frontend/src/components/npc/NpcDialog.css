@@ -1,0 +1,15 @@
+.dialog-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+}
+.dialog-box { width: 420px; max-width: 90vw; }
+.dialog-text { color: var(--green); font-size: 14px; margin: 10px 0; line-height: 1.8; min-height: 40px; }
+.dialog-input { display: flex; gap: 6px; margin-top: 8px; }
+.dialog-input input {
+  flex: 1; background: #0a0a0a; border: 1px solid var(--border-bright);
+  color: var(--text); padding: 5px 8px; font-family: var(--font); font-size: 13px;
+  border-radius: 2px;
+}
+.dialog-input input:focus { outline: none; border-color: var(--accent); }
