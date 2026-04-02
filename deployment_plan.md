@@ -335,7 +335,11 @@ Each patch = run migration tools for that domain's LPC files → commit JSON →
 
 ## Implementation Phases
 
-### Phase 1 — Infrastructure (Weeks 1–2)
+> **Status as of 2026-04-02 — ~85% complete. Phases 1–6 done, Phase 7 partially done, Phase 8 not started.**
+> Next agent: start with `DynamicQuest.ts` (Phase 7 remainder), then work through Phase 8 top-to-bottom.
+> LPC source reference files are at `/root/projects/xkx/` on the same machine (not in this repo).
+
+### Phase 1 — Infrastructure ✅ DONE
 - Monorepo setup, Express + `ws` server, `pg` pool, DB migrations, dotenv
 - `POST /api/auth/guest` → insert session + player + player_state rows, return token
 - WS upgrade: validate token from query string, create `GameSession`
@@ -343,53 +347,60 @@ Each patch = run migration tools for that domain's LPC files → commit JSON →
 - GitHub Actions: Vite build → `gh-pages` branch on push to `main`
 - **Test**: `PING` → `PONG` round-trip via WS
 
-### Phase 2 — Data Migration & World Loading (Weeks 3–4)
-- Write and run all four `tools/parse-*.ts` scripts against LPC source
+### Phase 2 — Data Migration & World Loading ✅ DONE
+- All four `tools/parse-*.ts` scripts written and run against LPC source
+- JSON data committed for **all 10 domain patches** (not just city) under `backend/src/data/`
 - `WorldLoader.ts` reads JSON into Maps at startup
-- Wire `GET /api/world/room/:id` to serve from memory
+- `GET /api/world/room/:id` serves from memory
 - **Test**: All ~200 city rooms queryable; cross-domain exit targets logged as warnings
 
-### Phase 3 — Movement & Room Rendering (Weeks 5–6)
+### Phase 3 — Movement & Room Rendering ✅ DONE
 - `MoveAction.ts`, `TickEngine.ts` (2s tick), `GameSession` load/save lifecycle
 - Frontend: `RoomView`, `ExitButtons`, `EventLog`, `StatsPanel`, `MiniMap`
 - Player spawns at `/d/city/beimen`, walks through city, sees Traditional Chinese descriptions
 - **Test**: Walk a known city path, verify exit connectivity
 
-### Phase 4 — Combat (Weeks 7–9)
+### Phase 4 — Combat ✅ DONE
 - Port `skill_power()` formula and `damage_msg()` thresholds from `combatd.c`
 - Reference: `/root/projects/xkx/adm/daemons/combatd.c` (canonical formulas)
 - `AttackAction.ts`, `CombatEngine.ts`, `DamageCalc.ts`, `NpcInstance.ts`
 - Frontend: `CombatHUD`, combat mode `ActionBar`, XP gain on kill
 - **Test**: Fight and kill a street thug (`hunhun`); verify damage types, flee, death state
 
-### Phase 5 — Inventory & Economy (Weeks 10–11)
+### Phase 5 — Inventory & Economy ✅ DONE
 - `ItemAction.ts`, `Inventory.ts`, loot from corpse
 - Shop flow in `TalkAction.ts` (buy/sell/list keywords → `DIALOG` events)
 - Money display helper: wen → 黃金/白銀/銅錢
 - Frontend: `InventoryPanel`, item tooltips, equip slots
 - **Test**: Kill NPC, loot, sell at pawn shop, buy weapon, equip
 
-### Phase 6 — Skills & Training (Week 12)
+### Phase 6 — Skills & Training ✅ DONE
 - `SkillBook.ts`, `TrainAction.ts`, prerequisite checks from skill JSON
 - Basic skills at `wuguan` trainer; school skills gated by `family_name`
 - Reference: `/root/projects/xkx/adm/daemons/race/human.c` for base stat init formulas
 - Frontend: `SkillPanel` with Chinese names from `names.json`
 - **Test**: Train `sword` to level 10, verify it improves hit rate in combat
 
-### Phase 7 — Quests & Dialogue (Week 13)
-- `QuestManager.ts`, `DynamicQuest.ts` (combat_exp-bracketed NPC targeting)
-- Static `inquiryTopics` responses from NPC JSON
-- `QUEST_ASSIGNED` / `QUEST_COMPLETE` events
-- Frontend: `NpcDialog` inquiry modal, quest log in `RightPanel`
-- **Test**: Receive quest from NPC, complete it, verify XP + score rewards
+### Phase 7 — Quests & Dialogue 🔶 PARTIALLY DONE
+**Done:** `QuestManager.ts`, `TalkAction.ts` (static inquiry/shop/training), `NpcDialog.tsx`, `NpcList.tsx`
 
-### Phase 8 — Polish & Deployment (Weeks 14–15)
-- Auto-save every 60s and on WS disconnect; session restoration on reconnect
-- Rate limiting (`express-rate-limit`), WS action debounce (500ms)
-- `pm2` on VPS, nginx reverse proxy (`/api` + `/ws` → localhost:3000)
-- `vite.config.ts`: `VITE_WS_URL` + `VITE_API_URL` from GitHub Actions secrets
-- `RenameModal` flow, error handling on all WS handlers
-- **Test**: Full smoke test — create guest, play through city, disconnect, reconnect, verify state restored
+**Remaining:**
+- [ ] Create `backend/src/engine/quests/DynamicQuest.ts` — combat_exp-bracketed NPC targeting for procedural quests; fires `QUEST_ASSIGNED` / `QUEST_COMPLETE` WS events; integrate with `QuestManager.ts`
+- [ ] Verify `QUEST_ASSIGNED` / `QUEST_COMPLETE` events wired end-to-end to frontend quest log in `RightPanel`
+- [ ] **Test**: Receive quest from NPC, complete it, verify XP + score rewards
+
+### Phase 8 — Polish & Deployment ❌ NOT STARTED
+- [ ] Auto-save every 60s (`setInterval` in `GameSession.ts`) and on WS disconnect (`close` event handler)
+- [ ] Session restoration on reconnect: WS upgrade handler checks existing `GameSession` for token before creating new one
+- [ ] Rate limiting: add `express-rate-limit` middleware in `backend/src/index.ts`
+- [ ] WS action debounce: 500ms guard in `backend/src/ws/handler.ts` per connection
+- [ ] `pm2` already has `ecosystem.config.js` — confirm env vars and deploy on VPS
+- [ ] nginx reverse proxy on VPS: `/api` + `/ws` → `localhost:3000` (no config file committed yet)
+- [ ] `vite.config.ts`: read `VITE_WS_URL` + `VITE_API_URL` env vars; add secrets to GitHub Actions
+- [ ] Wire `RenameModal` end-to-end in `App.tsx` (component exists, confirm it's mounted and triggered)
+- [ ] Error handling audit: every WS action handler must send `{ type: "ERROR", payload: { code, message } }` on throw rather than crashing session
+- [ ] **DB**: check whether `002_player.sql` is needed or if `001_init.sql` already contains all tables
+- [ ] **Test**: Full smoke test (10 steps — see Verification section below)
 
 ---
 
