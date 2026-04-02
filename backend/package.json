@@ -23,7 +23,7 @@
     "@types/node": "^20.14.9",
     "@types/pg": "^8.11.6",
     "@types/ws": "^8.5.11",
-    "node-pg-migrate": "^7.5.2",
+    "node-pg-migrate": "^8.0.4",
     "nodemon": "^3.1.4",
     "tsx": "^4.16.0",
     "typescript": "^5.5.3"
