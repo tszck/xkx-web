@@ -1,5 +1,22 @@
 import { create } from 'zustand'
-import type { ServerEvent, RoomPayload, LogEntry, PlayerStatsPayload, InventoryItem, CombatRoundPayload, SkillPayload } from '../ws/messageTypes'
+import type { ServerEvent, RoomPayload, LogEntry, PlayerStatsPayload, InventoryItem, CombatRoundPayload, SkillPayload, QuestAssignedPayload, QuestCompletePayload } from '../ws/messageTypes'
+import type { PlayerSnapshotResponse } from '../api/player'
+
+export interface QuestEntry {
+  questId: string
+  description: string
+  status: 'active' | 'completed'
+  assignedNpc?: string
+  reward?: string
+}
+
+function describeQuest(questId: string, assignedNpc?: string | null) {
+  if (questId.startsWith('dyn_hunt:')) {
+    const target = assignedNpc ?? questId.split(':')[1] ?? '未知目標'
+    return `擊敗目標：${target}`
+  }
+  return questId
+}
 
 interface GameState {
   // Auth
@@ -16,6 +33,8 @@ interface GameState {
   inventory: InventoryItem[]
   // Skills
   skills: SkillPayload[]
+  // Quests
+  quests: QuestEntry[]
   // Combat
   inCombat: boolean
   combatEnemy: { id: string; name: string; qiRatio: number } | null
@@ -33,6 +52,7 @@ interface GameState {
   setAuth: (token: string, playerId: number, displayName: string) => void
   setDisplayName: (name: string) => void
   setRoomSummaries: (s: GameState['roomSummaries']) => void
+  hydrateFromSnapshot: (snapshot: PlayerSnapshotResponse) => void
   handleServerEvent: (event: ServerEvent) => void
   openDialog: (npcId: string, npcName: string) => void
   closeDialog: () => void
@@ -43,7 +63,7 @@ const MAX_LOG = 200
 
 export const useGameStore = create<GameState>((set, get) => ({
   token: null, playerId: null, displayName: '',
-  room: null, log: [], stats: null, inventory: [], skills: [],
+  room: null, log: [], stats: null, inventory: [], skills: [], quests: [],
   inCombat: false, combatEnemy: null, lastRound: null,
   dialogOpen: false, dialogNpc: null, dialogText: '',
   renameModalOpen: false, roomSummaries: [],
@@ -51,6 +71,43 @@ export const useGameStore = create<GameState>((set, get) => ({
   setAuth: (token, playerId, displayName) => set({ token, playerId, displayName }),
   setDisplayName: (name) => set({ displayName: name }),
   setRoomSummaries: (s) => set({ roomSummaries: s }),
+  hydrateFromSnapshot: (snapshot) => {
+    const stats = snapshot.state ? {
+      qi: snapshot.state.qi,
+      maxQi: snapshot.state.max_qi,
+      jing: snapshot.state.jing,
+      maxJing: snapshot.state.max_jing,
+      neili: snapshot.state.neili,
+      maxNeili: snapshot.state.max_neili,
+      combatExp: snapshot.state.combat_exp,
+      money: snapshot.state.money,
+      shen: snapshot.state.shen,
+    } as PlayerStatsPayload : null
+
+    const inventory = snapshot.inventory.map(i => ({
+      id: i.id,
+      itemId: i.item_id,
+      name: i.item_id,
+      quantity: i.quantity,
+      slot: i.slot,
+    }))
+
+    const skills = snapshot.skills.map(s => ({
+      skillId: s.skill_id,
+      level: s.level,
+      nameCN: s.skill_id,
+      martialType: 'other',
+    }))
+
+    const quests = snapshot.quests.map(q => ({
+      questId: q.quest_id,
+      description: describeQuest(q.quest_id, q.assigned_npc),
+      status: q.status === 'completed' ? 'completed' as const : 'active' as const,
+      assignedNpc: q.assigned_npc ?? undefined,
+    }))
+
+    set({ stats, inventory, skills, quests })
+  },
   openDialog: (id, name) => set({ dialogOpen: true, dialogNpc: { id, name }, dialogText: '' }),
   closeDialog: () => set({ dialogOpen: false }),
   setRenameModal: (open) => set({ renameModalOpen: open }),
@@ -93,6 +150,25 @@ export const useGameStore = create<GameState>((set, get) => ({
       case 'SKILL_UPDATE': {
         const { skillId, level } = payload as { skillId: string; level: number }
         set(s => ({ skills: s.skills.map(sk => sk.skillId === skillId ? { ...sk, level } : sk) })); break
+      }
+      case 'QUEST_ASSIGNED': {
+        const { questId, description } = payload as QuestAssignedPayload
+        set(s => {
+          const without = s.quests.filter(q => q.questId !== questId)
+          return {
+            quests: [{ questId, description, status: 'active' as const }, ...without],
+            log: [...s.log, { timestamp: Date.now(), category: 'quest' as const, text: `接取任務：${description}` }].slice(-MAX_LOG),
+          }
+        })
+        break
+      }
+      case 'QUEST_COMPLETE': {
+        const { questId, reward } = payload as QuestCompletePayload
+        set(s => ({
+          quests: s.quests.map(q => q.questId === questId ? { ...q, status: 'completed' as const, reward } : q),
+          log: [...s.log, { timestamp: Date.now(), category: 'quest' as const, text: `任務完成：${questId}（${reward}）` }].slice(-MAX_LOG),
+        }))
+        break
       }
     }
   },

@@ -335,7 +335,7 @@ Each patch = run migration tools for that domain's LPC files → commit JSON →
 
 ## Implementation Phases
 
-> **Status as of 2026-04-04 — ~92% complete. Phases 1–6 done, Phase 7 partially done, Phase 8 code hardening done and validated.**
+> **Status as of 2026-04-04 — ~96% complete. Phases 1–7 done, Phase 8 code hardening done and validated.**
 > LPC source reference files are at `/root/projects/xkx/` on the same machine (not in this repo).
 
 ### Phase 1 — Infrastructure ✅ DONE
@@ -380,13 +380,20 @@ Each patch = run migration tools for that domain's LPC files → commit JSON →
 - Frontend: `SkillPanel` with Chinese names from `names.json`
 - **Test**: Train `sword` to level 10, verify it improves hit rate in combat
 
-### Phase 7 — Quests & Dialogue 🔶 PARTIALLY DONE
-**Done:** `QuestManager.ts`, `TalkAction.ts` (static inquiry/shop/training), `NpcDialog.tsx`, `NpcList.tsx`
+### Phase 7 — Quests & Dialogue ✅ DONE
+**Done:** `QuestManager.ts`, `TalkAction.ts` (static inquiry/shop/training + 任務 topic), `NpcDialog.tsx`, `NpcList.tsx`, `DynamicQuest.ts`, frontend `QuestPanel` + store event wiring, NPC relative-ID spawn resolver in `GameSession.ts`
 
 **Remaining:**
-- [ ] Create `backend/src/engine/quests/DynamicQuest.ts` — combat_exp-bracketed NPC targeting for procedural quests; fires `QUEST_ASSIGNED` / `QUEST_COMPLETE` WS events; integrate with `QuestManager.ts`
-- [ ] Verify `QUEST_ASSIGNED` / `QUEST_COMPLETE` events wired end-to-end to frontend quest log in `RightPanel`
-- [ ] **Test**: Receive quest from NPC, complete it, verify XP + score rewards
+- [x] Create `backend/src/engine/quests/DynamicQuest.ts` — combat_exp-bracketed NPC targeting for procedural quests; integrate with `QuestManager.ts`
+- [x] Wire `QUEST_ASSIGNED` / `QUEST_COMPLETE` events end-to-end to frontend quest log in `RightPanel`
+- [x] **Test**: Full live flow in one session: receive quest from NPC, complete it via actual combat kill, verify XP + score rewards
+
+**Validation log (2026-04-04):**
+- Backend build: pass (`tsc`)
+- Frontend build: pass (`tsc && vite build`)
+- Live WS quest assignment: pass (`TALK` with `任務` returned `QUEST_ASSIGNED`)
+- Quest completion logic: pass at manager level (`completeNpcKillQuests` updates DB + emits `STAT_UPDATE`/`QUEST_COMPLETE`)
+- Full combat-path quest completion in live gameplay session: pass (`QUEST_COMPLETE` observed after kill)
 
 ### Phase 8 — Polish & Deployment 🔶 IN PROGRESS
 - [x] Auto-save every 60s and on WS disconnect verified in code
@@ -403,19 +410,39 @@ Each patch = run migration tools for that domain's LPC files → commit JSON →
 - [ ] **Ops smoke test on VPS** (full 10-step verification in Verification section)
 
 ### Next Deployment To-Do (Ops)
-- [ ] On VPS, set production env vars before PM2 start:
-  - `DATABASE_URL=...`
-  - `CORS_ORIGIN=https://<your-domain>`
-- [ ] Build and start backend with PM2:
+- [x] On VPS, set runtime env vars before PM2 start (executed in shell for current session)
+  - `DATABASE_URL=postgresql://xkx:xkx_dev_pass@localhost:5432/xkx_game`
+  - `CORS_ORIGIN=http://localhost:5173`
+- [x] Build and start backend with PM2
   - `cd backend && npm run build`
-  - `pm2 start ecosystem.config.js && pm2 save`
+  - `pm2 restart xkx-backend --update-env && pm2 save`
 - [ ] Install nginx site from `nginx.conf.example`, replace domain/SSL paths, run `nginx -t`, reload nginx
+  - Blocker: `nginx` is not installed in current environment
 - [ ] Configure GitHub repo secrets:
   - `VITE_WS_URL=wss://<your-domain>/ws`
   - `VITE_API_URL=https://<your-domain>/api`
-- [ ] Set repo variable `VITE_BASE_PATH` (for Pages path mode)
+  - Blocker: public domain not provided yet
+- [x] Set repo variable `VITE_BASE_PATH` (for Pages path mode)
+  - Set to `/xkx-web/` via `gh variable set`
 - [ ] Push to `main` and confirm frontend deploy workflow succeeds
 - [ ] Run full end-to-end 10-step smoke test (guest create, move, combat, loot, shop, equip, train, reconnect, rename)
+
+### Ops Validation Log (2026-04-04)
+- PM2 installed and usable (`6.0.14`)
+- GitHub CLI authenticated as `tszck`
+- Existing port conflict found on `3000` (occupied by another app: `dnd`)
+- `xkx-backend` PM2 process recovered and validated on `3101`
+- API validation pass: `POST /api/auth/guest` returned token/player payload
+- WS validation pass: gameplay action path responds (`LOOK` -> `ROOM_ENTER`)
+- GitHub Actions variable configured: `VITE_BASE_PATH=/xkx-web/`
+
+### Frontend Deploy Hardening (2026-04-04)
+- Added favicon asset and HTML icon link to eliminate default `/favicon.ico` 404 on Pages
+- Switched favicon link to a relative path so it works under the `/xkx-web/` Pages subpath
+- Added a real `/favicon.ico` fallback for browsers that still probe the default icon path
+- Made Vite env handling ignore blank `VITE_BASE_PATH` / `VITE_API_URL` / `VITE_WS_URL` values and fall back to safe defaults
+- Added runtime guards so GitHub Pages surfaces a clear configuration error instead of posting back to itself when API/WS URLs are missing
+- Added guest-start error UI so broken API config surfaces a clear message instead of an unhandled promise rejection
 
 ---
 

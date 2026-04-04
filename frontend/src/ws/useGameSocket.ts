@@ -4,6 +4,20 @@ import { useGameStore } from '../store'
 
 declare const __WS_URL__: string
 
+function getConfiguredWsUrl() {
+  const wsUrl = (__WS_URL__ ?? '').trim()
+  if (!wsUrl) {
+    throw new Error('前端尚未設定 WebSocket URL，請在 GitHub repository secrets 中設定 VITE_WS_URL。')
+  }
+
+  const isGithubPages = typeof window !== 'undefined' && window.location.hostname.endsWith('github.io')
+  if (isGithubPages && /localhost|127\.0\.0\.1/.test(wsUrl)) {
+    throw new Error('GitHub Pages 前端尚未設定外部 WebSocket URL，請設定 VITE_WS_URL / VITE_API_URL。')
+  }
+
+  return wsUrl.replace(/\/$/, '')
+}
+
 export function useGameSocket(token: string | null) {
   const ws = useRef<WebSocket | null>(null)
   const { handleServerEvent } = useGameStore()
@@ -17,7 +31,13 @@ export function useGameSocket(token: string | null) {
   useEffect(() => {
     if (!token) return
 
-    const url = `${__WS_URL__}?token=${encodeURIComponent(token)}`
+    let url: string
+    try {
+      url = `${getConfiguredWsUrl()}?token=${encodeURIComponent(token)}`
+    } catch (err) {
+      console.error(err)
+      return
+    }
     const socket = new WebSocket(url)
     ws.current = socket
 

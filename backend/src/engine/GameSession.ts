@@ -9,6 +9,16 @@ import { NpcInstance } from './world/NpcInstance'
 import { worldLoader } from './world/WorldLoader'
 import { config } from '../config'
 
+function resolveNpcId(roomId: string, rawNpcId: string): string {
+  if (rawNpcId.startsWith('/')) return rawNpcId
+  if (rawNpcId.startsWith('npc/')) {
+    const parts = roomId.split('/').filter(Boolean)
+    const domain = parts[1] ?? 'city'
+    return `/d/${domain}/${rawNpcId}`
+  }
+  return rawNpcId
+}
+
 export interface ServerEvent {
   type: string
   payload?: unknown
@@ -77,10 +87,11 @@ export class GameSession {
     }
     const room = new RoomInstance(def)
     // Spawn NPCs
-    for (const npcId of def.npcs) {
+    for (const rawNpcId of def.npcs) {
+      const npcId = resolveNpcId(roomId, rawNpcId)
       const npcDef = worldLoader.getNpc(npcId)
       if (!npcDef) continue
-      const count = def.npcCounts?.[npcId] ?? 1
+      const count = def.npcCounts?.[rawNpcId] ?? def.npcCounts?.[npcId] ?? 1
       for (let i = 0; i < count; i++) {
         const inst = new NpcInstance(npcDef, `${npcId}#${i}`)
         room.npcs.set(inst.instanceId, inst)

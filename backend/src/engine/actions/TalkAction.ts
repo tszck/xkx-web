@@ -1,5 +1,7 @@
 import type { GameSession } from '../GameSession'
 import { worldLoader } from '../world/WorldLoader'
+import { dynamicQuest } from '../quests/DynamicQuest'
+import { questManager } from '../quests/QuestManager'
 
 export class TalkAction {
   execute(session: GameSession, payload: { npcId: string; topic?: string }) {
@@ -12,6 +14,11 @@ export class TalkAction {
     }
 
     const topic = payload.topic?.toLowerCase().trim() ?? ''
+
+    if (topic === 'quest' || topic === '任務' || topic === '任务') {
+      void this.handleQuestTopic(session, npc.def.name)
+      return
+    }
 
     // Shop flow
     if (npc.def.type === 'shop' || npc.def.type === 'waiter') {
@@ -45,5 +52,24 @@ export class TalkAction {
       hostile:  '「找死！」',
     }
     session.send({ type: 'DIALOG', payload: { npcName: npc.def.name, text: fallback[npc.def.attitude] ?? '……' } })
+  }
+
+  private async handleQuestTopic(session: GameSession, npcName: string) {
+    const existing = await questManager.getActiveDynamicQuest(session)
+    if (existing) {
+      session.send({ type: 'DIALOG', payload: { npcName, text: '你手上已有任務，先完成再來。' } })
+      return
+    }
+
+    const quest = dynamicQuest.generateHuntQuest(session)
+    if (!quest) {
+      session.send({ type: 'DIALOG', payload: { npcName, text: '最近沒有合適的委託，你先四處歷練吧。' } })
+      return
+    }
+
+    await questManager.assignQuest(session, quest.questId, quest.targetNpcId, quest.description)
+    session.send({ type: 'DIALOG', payload: { npcName, text: `委託給你：${quest.description}。完成後回報江湖消息。` } })
+    session.sendLog(`接取任務：${quest.description}`, 'quest')
+    session.sendLog(`任務提示：完成可得 ${quest.rewardXp} 經驗、${quest.rewardScore} 聲望。`, 'quest')
   }
 }

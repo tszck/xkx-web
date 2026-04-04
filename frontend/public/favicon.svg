@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="俠客行">
+  <rect width="64" height="64" rx="10" fill="#0d0d0d"/>
+  <rect x="9" y="9" width="46" height="46" rx="8" fill="none" stroke="#c8a040" stroke-width="3"/>
+  <path d="M20 20h24l-7 12 7 12H20l7-12-7-12Z" fill="#c8a040"/>
+</svg>

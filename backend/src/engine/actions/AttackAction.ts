@@ -1,5 +1,6 @@
 import type { GameSession } from '../GameSession'
 import { resolvePlayerAttack, resolveNpcAttack } from '../combat/CombatEngine'
+import { questManager } from '../quests/QuestManager'
 
 export class AttackAction {
   execute(session: GameSession, payload: { targetId: string }) {
@@ -18,10 +19,10 @@ export class AttackAction {
     npc.inCombatWith = String(session.playerId)
     session.send({ type: 'COMBAT_START', payload: { enemyId: npc.instanceId, enemyName: npc.def.name } })
 
-    this.runRound(session)
+    void this.runRound(session)
   }
 
-  private runRound(session: GameSession) {
+  private async runRound(session: GameSession) {
     const npc = session.combatTarget
     if (!npc || !session.currentRoom) { this.endCombat(session, 'flee'); return }
 
@@ -32,6 +33,7 @@ export class AttackAction {
     if (!npc.alive) {
       const xp = Math.floor(npc.def.combatExp * 0.3)
       session.state.combatExp += xp
+      await questManager.completeNpcKillQuests(session, npc.def.id, npc.def.name, npc.def.combatExp)
       session.send({ type: 'STAT_UPDATE', payload: session.state.toStatPayload() })
       // Drop corpse item
       session.currentRoom.floorItems.push({ itemId: `corpse:${npc.def.id}`, quantity: 1 })
@@ -51,7 +53,13 @@ export class AttackAction {
 
     // Schedule next round (2s)
     setTimeout(() => {
-      if (session.combatTarget === npc) this.runRound(session)
+      if (session.combatTarget === npc) {
+        void this.runRound(session).catch(err => {
+          console.error('Combat round failed:', err)
+          session.send({ type: 'ERROR', payload: { code: 'COMBAT_ROUND_ERROR', message: '戰鬥中斷' } })
+          this.endCombat(session, 'flee')
+        })
+      }
     }, 2000)
   }
 

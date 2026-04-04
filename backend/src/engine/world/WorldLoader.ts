@@ -113,6 +113,7 @@ class WorldLoader {
   getNpc(id: string): NpcDef | undefined { return this.npcs.get(id) }
   getItem(id: string): ItemDef | undefined { return this.items.get(id) }
   getSkill(id: string): SkillDef | undefined { return this.skills.get(id) }
+  getAllNpcs() { return Array.from(this.npcs.values()) }
 
   getAllRoomSummaries() {
     return Array.from(this.rooms.values()).map(r => ({

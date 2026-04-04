@@ -64,6 +64,16 @@ export interface SkillPayload {
   martialType: string
 }
 
+export interface QuestAssignedPayload {
+  questId: string
+  description: string
+}
+
+export interface QuestCompletePayload {
+  questId: string
+  reward: string
+}
+
 export interface ServerEvent {
   type: ServerEventType
   payload?: unknown
