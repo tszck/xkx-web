@@ -31,6 +31,8 @@ export interface CombatRoundPayload {
   playerQi: number
   playerJing: number
   enemyQiRatio: number
+  enemyQi: number
+  enemyMaxQi: number
 }
 
 export interface LogEntry {

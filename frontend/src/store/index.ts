@@ -37,7 +37,7 @@ interface GameState {
   quests: QuestEntry[]
   // Combat
   inCombat: boolean
-  combatEnemy: { id: string; name: string; qiRatio: number } | null
+  combatEnemy: { id: string; name: string; qiRatio: number; qi: number; maxQi: number } | null
   lastRound: CombatRoundPayload | null
   // Dialog
   dialogOpen: boolean
@@ -129,14 +129,22 @@ export const useGameStore = create<GameState>((set, get) => ({
       case 'INVENTORY_UPDATE':
         set({ inventory: (payload as { items: InventoryItem[] }).items }); break
       case 'COMBAT_START': {
-        const { enemyId: id, enemyName: name } = payload as { enemyId: string; enemyName: string }
-        set({ inCombat: true, combatEnemy: { id, name, qiRatio: 100 } }); break
+        const { enemyId: id, enemyName: name, enemyQi, enemyMaxQi } = payload as { enemyId: string; enemyName: string; enemyQi?: number; enemyMaxQi?: number }
+        const maxQi = Math.max(1, Number(enemyMaxQi ?? 100))
+        const qi = Math.max(0, Math.min(Number(enemyQi ?? maxQi), maxQi))
+        const qiRatio = Math.max(0, Math.min(100, Math.round((qi / maxQi) * 100)))
+        set({ inCombat: true, combatEnemy: { id, name, qiRatio, qi, maxQi } }); break
       }
       case 'COMBAT_ROUND': {
         const round = payload as CombatRoundPayload
         set(s => ({
           lastRound: round,
-          combatEnemy: s.combatEnemy ? { ...s.combatEnemy, qiRatio: round.enemyQiRatio } : null,
+          combatEnemy: s.combatEnemy ? {
+            ...s.combatEnemy,
+            qiRatio: round.enemyQiRatio,
+            qi: Number(round.enemyQi ?? s.combatEnemy.qi),
+            maxQi: Number(round.enemyMaxQi ?? s.combatEnemy.maxQi),
+          } : null,
           log: [...s.log, { timestamp: Date.now(), category: 'combat' as const, text: round.message }].slice(-MAX_LOG),
         })); break
       }

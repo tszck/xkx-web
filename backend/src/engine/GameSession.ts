@@ -222,7 +222,7 @@ export class GameSession {
       if (target && (!roomId || roomId === this.currentRoom?.id)) {
         this.combatTarget = target
         target.inCombatWith = String(this.playerId)
-        this.send({ type: 'COMBAT_START', payload: { enemyId: target.instanceId, enemyName: target.def.name } })
+        this.send({ type: 'COMBAT_START', payload: { enemyId: target.instanceId, enemyName: target.def.name, enemyQi: target.qi, enemyMaxQi: target.maxQi } })
         this.sendLog('你的戰鬥狀態已從資料庫恢復。', 'combat')
         return
       }

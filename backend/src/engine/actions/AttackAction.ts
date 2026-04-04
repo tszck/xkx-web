@@ -18,7 +18,7 @@ export class AttackAction {
     session.combatTarget = npc
     npc.inCombatWith = String(session.playerId)
     void session.setActionState('combat', npc.def.id, { roomId: room.id, enemyName: npc.def.name })
-    session.send({ type: 'COMBAT_START', payload: { enemyId: npc.instanceId, enemyName: npc.def.name } })
+    session.send({ type: 'COMBAT_START', payload: { enemyId: npc.instanceId, enemyName: npc.def.name, enemyQi: npc.qi, enemyMaxQi: npc.maxQi } })
 
     void this.runRound(session)
   }

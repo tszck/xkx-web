@@ -17,6 +17,8 @@ export interface RoundResult {
   playerQi: number
   playerJing: number
   enemyQiRatio: number
+  enemyQi: number
+  enemyMaxQi: number
 }
 
 function rand(n: number): number { return Math.floor(Math.random() * n) }
@@ -52,10 +54,10 @@ export function resolvePlayerAttack(
   const pp = calcParryPower(npc.def.skills['parry'] ?? 0, npc.def.attrs['sta'] ?? 10)
 
   if (rand(ap + dp) < dp) {
-    return { attackerName: playerName, defenderName: npc.def.name, result: 'dodge', message: `${npc.def.name}閃避了你的攻擊！`, playerQi: player.qi, playerJing: player.jing, enemyQiRatio: npc.qiRatio }
+    return { attackerName: playerName, defenderName: npc.def.name, result: 'dodge', message: `${npc.def.name}閃避了你的攻擊！`, playerQi: player.qi, playerJing: player.jing, enemyQiRatio: npc.qiRatio, enemyQi: npc.qi, enemyMaxQi: npc.maxQi }
   }
   if (rand(ap + pp) < pp) {
-    return { attackerName: playerName, defenderName: npc.def.name, result: 'parry', message: `${npc.def.name}格擋了你的攻擊！`, playerQi: player.qi, playerJing: player.jing, enemyQiRatio: npc.qiRatio }
+    return { attackerName: playerName, defenderName: npc.def.name, result: 'parry', message: `${npc.def.name}格擋了你的攻擊！`, playerQi: player.qi, playerJing: player.jing, enemyQiRatio: npc.qiRatio, enemyQi: npc.qi, enemyMaxQi: npc.maxQi }
   }
 
   const baseDmg = Math.max(1, ap - Math.floor(rand(3)))
@@ -75,6 +77,8 @@ export function resolvePlayerAttack(
     playerQi: player.qi,
     playerJing: player.jing,
     enemyQiRatio: npc.qiRatio,
+    enemyQi: npc.qi,
+    enemyMaxQi: npc.maxQi,
   }
 }
 
@@ -90,10 +94,10 @@ export function resolveNpcAttack(
   const pp = calcParryPower(skills.getLevel('parry'), player.sta)
 
   if (rand(ap + dp) < dp) {
-    return { attackerName: npc.def.name, defenderName: playerName, result: 'dodge', message: `你閃避了${npc.def.name}的攻擊！`, playerQi: player.qi, playerJing: player.jing, enemyQiRatio: npc.qiRatio }
+    return { attackerName: npc.def.name, defenderName: playerName, result: 'dodge', message: `你閃避了${npc.def.name}的攻擊！`, playerQi: player.qi, playerJing: player.jing, enemyQiRatio: npc.qiRatio, enemyQi: npc.qi, enemyMaxQi: npc.maxQi }
   }
   if (rand(ap + pp) < pp) {
-    return { attackerName: npc.def.name, defenderName: playerName, result: 'parry', message: `你格擋了${npc.def.name}的攻擊！`, playerQi: player.qi, playerJing: player.jing, enemyQiRatio: npc.qiRatio }
+    return { attackerName: npc.def.name, defenderName: playerName, result: 'parry', message: `你格擋了${npc.def.name}的攻擊！`, playerQi: player.qi, playerJing: player.jing, enemyQiRatio: npc.qiRatio, enemyQi: npc.qi, enemyMaxQi: npc.maxQi }
   }
 
   const baseDmg = Math.max(1, ap - Math.floor(rand(3)))
@@ -113,5 +117,7 @@ export function resolveNpcAttack(
     playerQi: player.qi,
     playerJing: player.jing,
     enemyQiRatio: npc.qiRatio,
+    enemyQi: npc.qi,
+    enemyMaxQi: npc.maxQi,
   }
 }
