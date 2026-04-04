@@ -25,6 +25,7 @@ const KEY_MOVE: Record<string, string> = {
 
 export default function MudCommandBar({ dispatch }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
+  const setHelpModal = useGameStore(s => s.setHelpModal)
   const room = useGameStore(s => s.room)
   const inventory = useGameStore(s => s.inventory)
   const dialogNpcId = useGameStore(s => s.dialogNpc?.id ?? null)
@@ -103,7 +104,10 @@ export default function MudCommandBar({ dispatch }: Props) {
     <div className="box mud-command-bar">
       <div className="mud-command-header">
         <span>MUD 指令</span>
-        <span className="mud-command-hint">/ 聚焦 | WASD/方向鍵移動 | l 察看 | r 調息</span>
+        <div className="mud-command-head-right">
+          <span className="mud-command-hint">/ 聚焦 | WASD/方向鍵移動 | l 察看 | r 調息</span>
+          <button title="打開原始 help 文檔" onClick={() => setHelpModal(true)}>Help</button>
+        </div>
       </div>
       <div className="mud-command-row">
         <span className="prompt">&gt;</span>

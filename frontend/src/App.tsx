@@ -8,9 +8,10 @@ import GuestWelcome from './components/auth/GuestWelcome'
 import GameLayout from './components/layout/GameLayout'
 import RenameModal from './components/auth/RenameModal'
 import NpcDialog from './components/npc/NpcDialog'
+import HelpModal from './components/ui/HelpModal'
 
 export default function App() {
-  const { token, setAuth, hydrateFromSnapshot, renameModalOpen, dialogOpen } = useGameStore()
+  const { token, setAuth, hydrateFromSnapshot, renameModalOpen, dialogOpen, helpModalOpen } = useGameStore()
   const [loading, setLoading] = useState(true)
   const [startupError, setStartupError] = useState<string | null>(null)
   const { dispatch } = useGameSocket(token)
@@ -109,6 +110,7 @@ export default function App() {
       <GameLayout dispatch={dispatch} />
       {renameModalOpen && <RenameModal />}
       {dialogOpen && <NpcDialog dispatch={dispatch} />}
+      {helpModalOpen && <HelpModal />}
     </>
   )
 }

@@ -30,15 +30,38 @@ function parseNum(src: string, key: string): number | null {
   return m ? Number(m[1]) : null
 }
 
-function parseExits(src: string, fileDir: string, domain: string): Record<string, string> {
+function normalizeRoomId(input: string): string {
+  const cleaned = input.replace(/\\/g, '/').replace(/\.c$/, '')
+  if (cleaned.startsWith('/')) return cleaned
+  if (cleaned.startsWith('d/')) return `/${cleaned}`
+  return cleaned
+}
+
+function resolveRelativeRoom(currentRoomId: string, target: string): string {
+  const baseDir = path.posix.dirname(currentRoomId)
+  return normalizeRoomId(path.posix.join(baseDir, target))
+}
+
+function parseExits(src: string, currentRoomId: string): Record<string, string> {
   const exits: Record<string, string> = {}
   const block = src.match(/set\("exits",\s*\(\[([\s\S]*?)\]\)\)/)
   if (!block) return exits
-  const entries = block[1].matchAll(/"([^"]+)"\s*:\s*(?:"([^"]+)"|__DIR__\s*\+\s*"([^"]+)")/g)
+  const entries = block[1].matchAll(/"([^"]+)"\s*:\s*(?:"([^"]+)"|__DIR__\s*\+?\s*"([^"]+)")/g)
   for (const m of entries) {
-    const dir = m[1]
-    const target = m[2] ?? `/d/${domain}/${m[3]?.replace(/\.c$/, '')}`
-    exits[dir] = target.replace(/\.c$/, '')
+    const dir = m[1]?.trim().toLowerCase()
+    if (!dir) continue
+
+    if (m[2]) {
+      const rawTarget = m[2].trim()
+      exits[dir] = rawTarget.startsWith('/') || rawTarget.startsWith('d/')
+        ? normalizeRoomId(rawTarget)
+        : resolveRelativeRoom(currentRoomId, rawTarget)
+      continue
+    }
+
+    if (m[3]) {
+      exits[dir] = resolveRelativeRoom(currentRoomId, m[3].trim())
+    }
   }
   return exits
 }
@@ -57,13 +80,15 @@ function parseNpcRefs(src: string, domain: string): { npcs: string[], npcCounts:
   return { npcs, npcCounts }
 }
 
-function processFile(filePath: string, domain: string, outDir: string) {
+function processFile(filePath: string, domain: string, domainPath: string, outDir: string) {
   const src = fs.readFileSync(filePath, 'utf-8')
-  const fileId = `/d/${domain}/${path.basename(filePath, '.c')}`
+  const relativePath = path.relative(domainPath, filePath).replace(/\\/g, '/')
+  const relativeNoExt = relativePath.replace(/\.c$/, '')
+  const fileId = `/d/${domain}/${relativeNoExt}`
 
   const short = parseString(src, 'short') ?? path.basename(filePath, '.c')
   const long = parseHeredoc(src) ?? ''
-  const exits = parseExits(src, path.dirname(filePath), domain)
+  const exits = parseExits(src, fileId)
   const { npcs, npcCounts } = parseNpcRefs(src, domain)
   const x = parseNum(src, 'coor/x') ?? null
   const y = parseNum(src, 'coor/y') ?? null
@@ -84,8 +109,32 @@ function processFile(filePath: string, domain: string, outDir: string) {
     ...(outdoors ? { outdoors } : {}),
   }
 
-  const outFile = path.join(outDir, `${path.basename(filePath, '.c')}.json`)
+  const outFile = path.join(outDir, `${relativeNoExt}.json`)
+  fs.mkdirSync(path.dirname(outFile), { recursive: true })
   fs.writeFileSync(outFile, JSON.stringify(room, null, 2))
+}
+
+function collectRoomFiles(domainPath: string): string[] {
+  const files: string[] = []
+  const skipDirs = new Set(['npc', 'obj'])
+
+  const walk = (currentPath: string) => {
+    const entries = fs.readdirSync(currentPath, { withFileTypes: true })
+    for (const entry of entries) {
+      const entryPath = path.join(currentPath, entry.name)
+      if (entry.isDirectory()) {
+        if (skipDirs.has(entry.name)) continue
+        walk(entryPath)
+        continue
+      }
+      if (entry.isFile() && entry.name.endsWith('.c')) {
+        files.push(entryPath)
+      }
+    }
+  }
+
+  walk(domainPath)
+  return files
 }
 
 // Process all domains or a specific one
@@ -98,10 +147,11 @@ const domains = fs.readdirSync(domainBase).filter(d => {
 for (const domain of domains) {
   const domainPath = path.join(domainBase, domain)
   const outDir = path.join(outRoot, domain)
+  fs.rmSync(outDir, { recursive: true, force: true })
   fs.mkdirSync(outDir, { recursive: true })
-  const files = fs.readdirSync(domainPath).filter(f => f.endsWith('.c'))
+  const files = collectRoomFiles(domainPath)
   for (const file of files) {
-    try { processFile(path.join(domainPath, file), domain, outDir) }
+    try { processFile(file, domain, domainPath, outDir) }
     catch (e) { console.warn(`Skipped ${file}:`, (e as Error).message) }
   }
   console.log(`[${domain}] ${files.length} rooms processed`)

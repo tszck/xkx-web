@@ -45,6 +45,7 @@ interface GameState {
   dialogText: string
   // UI
   renameModalOpen: boolean
+  helpModalOpen: boolean
   // Minimap room summaries (loaded once)
   roomSummaries: Array<{ id: string; short: string; coords?: { x: number; y: number } }>
 
@@ -57,6 +58,7 @@ interface GameState {
   openDialog: (npcId: string, npcName: string) => void
   closeDialog: () => void
   setRenameModal: (open: boolean) => void
+  setHelpModal: (open: boolean) => void
 }
 
 const MAX_LOG = 200
@@ -66,7 +68,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   room: null, log: [], stats: null, inventory: [], skills: [], quests: [],
   inCombat: false, combatEnemy: null, lastRound: null,
   dialogOpen: false, dialogNpc: null, dialogText: '',
-  renameModalOpen: false, roomSummaries: [],
+  renameModalOpen: false, helpModalOpen: false, roomSummaries: [],
 
   setAuth: (token, playerId, displayName) => set({ token, playerId, displayName }),
   setDisplayName: (name) => set({ displayName: name }),
@@ -111,6 +113,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   openDialog: (id, name) => set({ dialogOpen: true, dialogNpc: { id, name }, dialogText: '' }),
   closeDialog: () => set({ dialogOpen: false }),
   setRenameModal: (open) => set({ renameModalOpen: open }),
+  setHelpModal: (open) => set({ helpModalOpen: open }),
 
   handleServerEvent: (event) => {
     const { type, payload } = event
