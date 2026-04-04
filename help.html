@@ -3,78 +3,283 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>俠客行 幫助說明</title>
+    <title>俠客行一百 幫助說明</title>
     <style>
       :root {
-        --bg: #0f0f0f;
-        --panel: #171717;
-        --border: #303030;
-        --text: #d2d2d2;
-        --dim: #8b8b8b;
-        --accent: #d8ae4c;
+        --bg-0: #fbf8ef;
+        --bg-1: #f1ebdd;
+        --paper: #fffcf3;
+        --ink: #2a2620;
+        --ink-soft: #605846;
+        --line: #d4c7a8;
+        --accent: #875b1f;
+        --accent-soft: #b7833f;
       }
-      * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
+
       body {
         margin: 0;
         min-height: 100vh;
-        background: radial-gradient(1200px 500px at 20% -10%, #2a2210 0%, transparent 55%), var(--bg);
-        color: var(--text);
-        font-family: "Noto Sans TC", "Microsoft YaHei", monospace;
+        color: var(--ink);
+        font-family: "Noto Serif TC", "Source Han Serif TC", "PMingLiU", serif;
+        background:
+          radial-gradient(1200px 520px at 20% -10%, #fff8e2 0%, rgba(255, 248, 226, 0) 60%),
+          linear-gradient(165deg, var(--bg-0) 0%, var(--bg-1) 100%);
       }
+
       .wrap {
-        width: min(1100px, 94vw);
-        margin: 24px auto;
-        border: 1px solid var(--border);
-        background: var(--panel);
-        border-radius: 4px;
+        width: min(1080px, 94vw);
+        margin: 22px auto;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--paper);
         overflow: hidden;
+        box-shadow:
+          0 10px 24px rgba(41, 31, 18, 0.12),
+          0 1px 0 rgba(255, 255, 255, 0.85) inset;
       }
+
       .head {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 8px;
-        padding: 12px 14px;
-        border-bottom: 1px solid var(--border);
+        padding: 22px 22px 16px;
+        border-bottom: 1px solid var(--line);
+        background: linear-gradient(180deg, #fffdf8 0%, #f6efdd 100%);
       }
+
       .title {
         color: var(--accent);
-        font-size: 15px;
-        letter-spacing: 0.08em;
-      }
-      .status { color: var(--dim); font-size: 12px; }
-      pre {
+        font-size: clamp(24px, 4vw, 34px);
+        line-height: 1.2;
+        letter-spacing: 0.04em;
         margin: 0;
-        padding: 14px;
+      }
+
+      .subtitle {
+        margin: 8px 0 0;
+        font-size: 14px;
+        color: var(--ink-soft);
+      }
+
+      .status {
+        margin-top: 10px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--ink-soft);
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 14px 22px;
+        border-bottom: 1px solid var(--line);
+        background: #fff9ec;
+      }
+
+      .toolbar a {
+        text-decoration: none;
+        color: #fff;
+        background: linear-gradient(180deg, #9f6a28 0%, #7f531d 100%);
+        border: 1px solid #714819;
+        border-radius: 999px;
+        padding: 7px 12px;
+        font-size: 12px;
+      }
+
+      .panel {
+        margin: 0;
+        padding: 22px;
+      }
+
+      .fallback,
+      .content {
+        background: #fffef9;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 16px;
+      }
+
+      .content {
+        display: grid;
+        gap: 12px;
+      }
+
+      .section {
+        border: 1px solid #e8ddc4;
+        border-radius: 8px;
+        padding: 12px 13px;
+        background: #fff8e9;
+      }
+
+      .section h2 {
+        margin: 0 0 8px;
+        color: #6f4718;
+        font-size: 18px;
+        line-height: 1.3;
+      }
+
+      .section p {
+        margin: 0;
+        color: var(--ink);
+        line-height: 1.75;
+      }
+
+      .section ul {
+        margin: 0;
+        padding-left: 20px;
+        color: var(--ink);
+        line-height: 1.75;
+      }
+
+      .fallback {
+        font-family: "Sarasa Mono TC", "Noto Sans Mono CJK TC", monospace;
         white-space: pre-wrap;
-        line-height: 1.58;
+        line-height: 1.65;
         font-size: 13px;
         overflow: auto;
-        max-height: calc(100vh - 120px);
+        max-height: 50vh;
+        color: #473f30;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      @media (max-width: 680px) {
+        .head,
+        .toolbar,
+        .panel {
+          padding-left: 14px;
+          padding-right: 14px;
+        }
+
+        .section h2 {
+          font-size: 16px;
+        }
       }
     </style>
   </head>
   <body>
     <div class="wrap">
       <div class="head">
-        <div class="title">俠客行一百 幫助說明</div>
-        <div class="status" id="status">讀取中…</div>
+        <h1 class="title">俠客行一百 幫助說明</h1>
+        <p class="subtitle">整理為現代化可讀版，保留原始內容語意。</p>
+        <div class="status" id="status"><span class="dot"></span>讀取中…</div>
       </div>
-      <pre id="content">正在載入幫助文件…</pre>
+
+      <div class="toolbar">
+        <a href="/xkx-web/" id="back-link">返回遊戲</a>
+      </div>
+
+      <div class="panel">
+        <div id="content" class="content"></div>
+        <pre id="fallback" class="fallback hidden">正在載入幫助文件…</pre>
+      </div>
     </div>
 
     <script>
+      function getApiBaseUrl() {
+        const q = new URLSearchParams(window.location.search)
+        const override = q.get('api')
+        if (override) return override.replace(/\/$/, '')
+        if (window.location.hostname === 'tszck.github.io') {
+          return 'https://xkx.87.106.31.154.sslip.io/api'
+        }
+        return '/api'
+      }
+
+      function renderStructuredHelp(text) {
+        const contentEl = document.getElementById('content')
+        const fallbackEl = document.getElementById('fallback')
+        const lines = text.split(/\r?\n/)
+        const blocks = []
+        let current = null
+
+        function startSection(title) {
+          current = { title, items: [] }
+          blocks.push(current)
+        }
+
+        lines.forEach((raw) => {
+          const line = raw.trim()
+          if (!line) return
+
+          if (/^(\d+[\.、]|[一二三四五六七八九十]+、)/.test(line)) {
+            startSection(line)
+            return
+          }
+
+          if (!current) startSection('總覽')
+          current.items.push(line)
+        })
+
+        if (!blocks.length) {
+          contentEl.classList.add('hidden')
+          fallbackEl.classList.remove('hidden')
+          fallbackEl.textContent = text || '無內容'
+          return
+        }
+
+        const fragment = document.createDocumentFragment()
+        blocks.forEach((block) => {
+          const section = document.createElement('section')
+          section.className = 'section'
+
+          const h2 = document.createElement('h2')
+          h2.textContent = block.title
+          section.appendChild(h2)
+
+          const listItems = block.items.filter((it) => /^[-*•]/.test(it))
+          const paragraphItems = block.items.filter((it) => !/^[-*•]/.test(it))
+
+          if (paragraphItems.length) {
+            const p = document.createElement('p')
+            p.textContent = paragraphItems.join(' ')
+            section.appendChild(p)
+          }
+
+          if (listItems.length) {
+            const ul = document.createElement('ul')
+            listItems.forEach((it) => {
+              const li = document.createElement('li')
+              li.textContent = it.replace(/^[-*•]\s*/, '')
+              ul.appendChild(li)
+            })
+            section.appendChild(ul)
+          }
+
+          fragment.appendChild(section)
+        })
+
+        contentEl.innerHTML = ''
+        contentEl.appendChild(fragment)
+        contentEl.classList.remove('hidden')
+        fallbackEl.classList.add('hidden')
+      }
+
       (async function main() {
         const statusEl = document.getElementById('status');
-        const contentEl = document.getElementById('content');
+        const fallbackEl = document.getElementById('fallback');
+        const apiBaseUrl = getApiBaseUrl();
         try {
-          const res = await fetch('/api/help/topics');
+          const res = await fetch(`${apiBaseUrl}/help/topics`);
           if (!res.ok) throw new Error('HTTP ' + res.status);
           const data = await res.json();
-          contentEl.textContent = data.text || '無內容';
+          renderStructuredHelp(data.text || '');
           statusEl.textContent = '已更新';
         } catch (err) {
-          contentEl.textContent = '載入幫助失敗，請確認\u5f8c端服務與 API 路由。';
+          fallbackEl.classList.remove('hidden');
+          fallbackEl.textContent = `載入幫助失敗。\n請確認後端服務可用：${apiBaseUrl}/help/topics`;
           statusEl.textContent = '讀取失敗';
           console.error(err);
         }
