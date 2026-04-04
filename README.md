@@ -142,6 +142,34 @@ All messages are JSON with a `type` field.
 
 ---
 
+## Port Allocation
+
+To prevent port conflicts when running multiple projects locally, each server uses a distinct port:
+
+| Project | Server | Port | Environment | Notes |
+|---------|--------|------|-------------|-------|
+| **xkx-web** | Node.js backend | **3001** | Configured in `.env` and `ecosystem.config.js` | REST + WebSocket API |
+| **DND** | Node.js Express | **3000** | Configured in `.env` | Campaign manager (standalone) |
+| **Frontend** | Vite dev server | **5173** | Default Vite port | Only used during `npm run dev:frontend` |
+
+**Troubleshooting port conflicts:**
+
+If you get `EADDRINUSE` error (port already in use):
+
+```bash
+# Find process on a specific port (e.g., 3001)
+lsof -i :3001
+
+# Kill that process
+kill -9 <PID>
+
+# Or clean up all PM2 processes and restart
+pm2 delete all
+pm2 start ecosystem.config.js
+```
+
+---
+
 ## Production Deployment
 
 ### Backend (VPS)

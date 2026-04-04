@@ -8,7 +8,7 @@ module.exports = {
     max_memory_restart: '512M',
     env: {
       NODE_ENV: 'production',
-      PORT: 3000,
+      PORT: 3001,
       DATABASE_URL: process.env.DATABASE_URL || 'postgresql://xkx:password@localhost:5432/xkx_game',
       CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:5173',
     },
