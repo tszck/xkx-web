@@ -5,3 +5,12 @@
 .exit-btn:disabled { color: #333; border-color: #222; }
 .compass-center { display: flex; align-items: center; justify-content: center; color: #333; font-size: 16px; }
 .vert-exits { display: flex; flex-direction: column; gap: 2px; }
+.extra-exits { display: flex; flex-wrap: wrap; gap: 4px; max-width: 240px; }
+.extra-exit-btn {
+	min-width: 34px;
+	height: 24px;
+	font-size: 11px;
+	padding: 0 6px;
+	color: var(--accent);
+	border-color: var(--accent-dim);
+}

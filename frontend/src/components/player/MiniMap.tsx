@@ -11,11 +11,34 @@ export default function MiniMap() {
     }
   }, [roomSummaries.length, setRoomSummaries])
 
-  if (!room?.coords || roomSummaries.length === 0) return null
+  if (!room || roomSummaries.length === 0) return null
+
+  const summaryMap = new Map(roomSummaries.map(r => [r.id, r]))
+  const exitList = Object.entries(room.exits)
+
+  if (!room.coords) {
+    return (
+      <div className="box" style={{ flexShrink: 0 }}>
+        <div className="box-title">地圖</div>
+        <div style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 6 }}>此區域無座標地圖，顯示出口資訊。</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {exitList.map(([dir, target]) => {
+            const targetShort = summaryMap.get(target)?.short ?? target
+            return (
+              <div key={dir} style={{ fontSize: 12, display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                <span style={{ color: 'var(--accent)' }}>{dir}</span>
+                <span style={{ color: 'var(--text-dim)' }}>{targetShort}</span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
 
   const cx = room.coords.x, cy = room.coords.y
-  const R = 5  // radius of cells to show
-  const CELL = 16
+  const R = 7
+  const CELL = 14
 
   // Build grid
   const grid: Record<string, string> = {}
@@ -27,9 +50,24 @@ export default function MiniMap() {
     }
   }
 
+  const nearby = roomSummaries
+    .filter(r => r.coords)
+    .map(r => ({
+      id: r.id,
+      short: r.short,
+      dx: (r.coords?.x ?? 0) - cx,
+      dy: (r.coords?.y ?? 0) - cy,
+    }))
+    .filter(r => Math.abs(r.dx) <= 2 && Math.abs(r.dy) <= 2 && !(r.dx === 0 && r.dy === 0))
+    .sort((a, b) => Math.abs(a.dx) + Math.abs(a.dy) - (Math.abs(b.dx) + Math.abs(b.dy)))
+    .slice(0, 6)
+
   return (
     <div className="box" style={{ flexShrink:0 }}>
       <div className="box-title">地圖</div>
+      <div style={{ fontSize: 11, color: 'var(--text-dim)', marginBottom: 4 }}>
+        目前位置：{room.short} ({cx},{cy})
+      </div>
       <div style={{ position:'relative', width:(2*R+1)*CELL, height:(2*R+1)*CELL, background:'#0a0a0a', overflow:'hidden' }}>
         {Object.entries(grid).map(([key, type]) => {
           const [dx, dy] = key.split(',').map(Number)
@@ -45,6 +83,15 @@ export default function MiniMap() {
           )
         })}
       </div>
+      {nearby.length > 0 && (
+        <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {nearby.map(r => (
+            <div key={r.id} style={{ fontSize: 11, color: 'var(--text-dim)' }}>
+              {r.short} ({r.dx >= 0 ? `+${r.dx}` : r.dx},{r.dy >= 0 ? `+${r.dy}` : r.dy})
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

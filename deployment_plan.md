@@ -447,6 +447,15 @@ Each patch = run migration tools for that domain's LPC files → commit JSON →
 - Added runtime guards so GitHub Pages surfaces a clear configuration error instead of posting back to itself when API/WS URLs are missing
 - Added guest-start error UI so broken API config surfaces a clear message instead of an unhandled promise rejection
 
+### Frontend UX Fixes (2026-04-04)
+- Removed movement UI restriction by rendering all dynamic exits (not only compass/up/down)
+- Added non-compass exit buttons (`enter`, `out`, `in`, etc.) so rooms with custom exit keys remain traversable
+- Improved minimap meaning:
+  - Larger visible radius
+  - Current room/coordinate readout
+  - Nearby room labels with relative offsets
+  - Fallback mode that shows exit destinations when room coordinates are unavailable
+
 ### World Data SQL Migration Plan (2026-04-04)
 - [x] Add SQL migration `002_world_data.sql` with `world_rooms`, `world_npcs`, `world_items`, `world_skills`
 - [x] Add import tool `tools/import-world-to-db.ts` to upsert all JSON world data into PostgreSQL
