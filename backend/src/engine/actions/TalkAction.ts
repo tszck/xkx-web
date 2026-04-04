@@ -4,7 +4,7 @@ import { dynamicQuest } from '../quests/DynamicQuest'
 import { questManager } from '../quests/QuestManager'
 
 export class TalkAction {
-  execute(session: GameSession, payload: { npcId: string; topic?: string }) {
+  async execute(session: GameSession, payload: { npcId: string; topic?: string }) {
     const room = session.currentRoom
     if (!room) return
 
@@ -14,44 +14,49 @@ export class TalkAction {
     }
 
     const topic = payload.topic?.toLowerCase().trim() ?? ''
+    await session.setActionState('dialog', npc.def.id, { roomId: room.id, topic: topic || null })
 
-    if (topic === 'quest' || topic === '任務' || topic === '任务') {
-      void this.handleQuestTopic(session, npc.def.name)
-      return
-    }
-
-    // Shop flow
-    if (npc.def.type === 'shop' || npc.def.type === 'waiter') {
-      if (!topic || topic === 'list' || topic === '買' || topic === 'buy') {
-        const items = (npc.def.shopItems ?? []).map(id => {
-          const def = worldLoader.getItem(id)
-          return def ? `${def.name}（${def.value} 文）` : id
-        }).join('、')
-        session.send({ type: 'DIALOG', payload: { npcName: npc.def.name, text: items ? `本店出售：${items}` : '本店暫無貨物。' } })
+    try {
+      if (topic === 'quest' || topic === '任務' || topic === '任务') {
+        await this.handleQuestTopic(session, npc.def.name)
         return
       }
-    }
 
-    // Inquiry topics from NPC def
-    if (topic && npc.def.inquiryTopics[topic]) {
-      session.send({ type: 'DIALOG', payload: { npcName: npc.def.name, text: npc.def.inquiryTopics[topic] } })
-      return
-    }
+      // Shop flow
+      if (npc.def.type === 'shop' || npc.def.type === 'waiter') {
+        if (!topic || topic === 'list' || topic === '買' || topic === 'buy') {
+          const items = (npc.def.shopItems ?? []).map(id => {
+            const def = worldLoader.getItem(id)
+            return def ? `${def.name}（${def.value} 文）` : id
+          }).join('、')
+          session.send({ type: 'DIALOG', payload: { npcName: npc.def.name, text: items ? `本店出售：${items}` : '本店暫無貨物。' } })
+          return
+        }
+      }
 
-    // Random chat messages
-    const chats = npc.def.chatMessages
-    if (chats.length > 0) {
-      const text = chats[Math.floor(Math.random() * chats.length)]
-      session.send({ type: 'DIALOG', payload: { npcName: npc.def.name, text } })
-      return
-    }
+      // Inquiry topics from NPC def
+      if (topic && npc.def.inquiryTopics[topic]) {
+        session.send({ type: 'DIALOG', payload: { npcName: npc.def.name, text: npc.def.inquiryTopics[topic] } })
+        return
+      }
 
-    const fallback: Record<string, string> = {
-      friendly: '「有何貴幹？」',
-      neutral:  '對方似乎不想和你說話。',
-      hostile:  '「找死！」',
+      // Random chat messages
+      const chats = npc.def.chatMessages
+      if (chats.length > 0) {
+        const text = chats[Math.floor(Math.random() * chats.length)]
+        session.send({ type: 'DIALOG', payload: { npcName: npc.def.name, text } })
+        return
+      }
+
+      const fallback: Record<string, string> = {
+        friendly: '「有何貴幹？」',
+        neutral:  '對方似乎不想和你說話。',
+        hostile:  '「找死！」',
+      }
+      session.send({ type: 'DIALOG', payload: { npcName: npc.def.name, text: fallback[npc.def.attitude] ?? '……' } })
+    } finally {
+      await session.clearActionState()
     }
-    session.send({ type: 'DIALOG', payload: { npcName: npc.def.name, text: fallback[npc.def.attitude] ?? '……' } })
   }
 
   private async handleQuestTopic(session: GameSession, npcName: string) {

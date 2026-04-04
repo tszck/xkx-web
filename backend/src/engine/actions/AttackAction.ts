@@ -17,6 +17,7 @@ export class AttackAction {
 
     session.combatTarget = npc
     npc.inCombatWith = String(session.playerId)
+    void session.setActionState('combat', npc.def.id, { roomId: room.id, enemyName: npc.def.name })
     session.send({ type: 'COMBAT_START', payload: { enemyId: npc.instanceId, enemyName: npc.def.name } })
 
     void this.runRound(session)
@@ -37,6 +38,7 @@ export class AttackAction {
       session.send({ type: 'STAT_UPDATE', payload: session.state.toStatPayload() })
       // Drop corpse item
       session.currentRoom.floorItems.push({ itemId: `corpse:${npc.def.id}`, quantity: 1 })
+      void session.appendRoomItemDelta(session.currentRoom.id, `corpse:${npc.def.id}`, 1)
       session.send({ type: 'ROOM_ENTER', payload: session.currentRoom.toPayload() })
       this.endCombat(session, 'win', xp)
       return
@@ -81,6 +83,7 @@ export class AttackAction {
 
   private endCombat(session: GameSession, result: 'win' | 'lose' | 'flee', xpGained?: number) {
     session.combatTarget = null
+    void session.clearActionState()
     session.send({ type: 'COMBAT_END', payload: { result, xpGained } })
     if (result === 'lose') {
       session.state.qi = Math.floor(session.state.maxQi * 0.1)

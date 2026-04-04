@@ -26,37 +26,55 @@ const item = new ItemAction()
 const train = new TrainAction()
 
 export class ActionHandler {
-  handle(session: GameSession, action: ClientAction) {
+  async handle(session: GameSession, action: ClientAction) {
     switch (action.type) {
       case 'PING':
         session.send({ type: 'PONG' }); break
       case 'MOVE':
-        move.execute(session, action.payload); break
+        await move.execute(session, action.payload); break
       case 'ATTACK':
-        attack.execute(session, action.payload); break
+        attack.execute(session, action.payload)
+        await session.logAction('ATTACK', { targetId: action.payload.targetId }, 'OK')
+        break
       case 'FLEE':
-        attack.flee(session); break
+        attack.flee(session)
+        await session.logAction('FLEE', {}, 'OK')
+        break
       case 'TALK':
-        talk.execute(session, action.payload); break
+        await talk.execute(session, action.payload)
+        await session.logAction('TALK', { npcId: action.payload.npcId, topic: action.payload.topic ?? null }, 'OK')
+        break
       case 'GET_ITEM':
-        item.get(session, action.payload); break
+        await item.get(session, action.payload)
+        await session.logAction('GET_ITEM', { itemId: action.payload.itemId }, 'OK')
+        break
       case 'DROP_ITEM':
-        item.drop(session, action.payload); break
+        await item.drop(session, action.payload)
+        await session.logAction('DROP_ITEM', { itemId: action.payload.itemId }, 'OK')
+        break
       case 'USE_ITEM':
-        item.use(session, action.payload); break
+        await item.use(session, action.payload)
+        await session.logAction('USE_ITEM', { itemId: action.payload.itemId }, 'OK')
+        break
       case 'EQUIP_ITEM':
-        item.equip(session, action.payload); break
+        await item.equip(session, action.payload)
+        await session.logAction('EQUIP_ITEM', { itemId: action.payload.itemId }, 'OK')
+        break
       case 'LOOK':
         if (session.currentRoom) {
           session.send({ type: 'ROOM_ENTER', payload: session.currentRoom.toPayload() })
         }
+        await session.logAction('LOOK', { target: action.payload?.target ?? null }, 'OK')
         break
       case 'TRAIN_SKILL':
-        train.execute(session, action.payload); break
+        await train.execute(session, action.payload)
+        await session.logAction('TRAIN_SKILL', { skillId: action.payload.skillId, npcId: action.payload.npcId }, 'OK')
+        break
       case 'REST':
         session.state.heal(Math.floor(session.state.maxQi * 0.1))
         session.send({ type: 'STAT_UPDATE', payload: session.state.toStatPayload() })
         session.sendLog('你靜心調息，恢復了一些氣血。', 'system')
+        await session.logAction('REST', {}, 'OK')
         break
       default:
         session.send({ type: 'ERROR', payload: { code: 'UNKNOWN_ACTION', message: '未知指令' } })

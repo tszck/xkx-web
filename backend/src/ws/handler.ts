@@ -16,10 +16,8 @@ export function handleMessage(session: GameSession, msg: unknown) {
   if (now - last < DEBOUNCE_MS && action.type !== 'PING') return
   lastAction.set(session, now)
 
-  try {
-    actionHandler.handle(session, action)
-  } catch (err) {
+  void actionHandler.handle(session, action).catch((err) => {
     console.error('Action handler error:', err)
     session.send({ type: 'ERROR', payload: { code: 'ACTION_ERROR', message: '操作失敗' } })
-  }
+  })
 }

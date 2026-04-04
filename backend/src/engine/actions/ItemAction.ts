@@ -9,6 +9,7 @@ export class ItemAction {
     if (idx === -1) { session.sendLog('地上沒有這個東西。', 'item'); return }
     const [item] = room.floorItems.splice(idx, 1)
     await session.inventory.addItem(item.itemId, item.quantity)
+    await session.appendRoomItemDelta(room.id, item.itemId, -item.quantity)
     session.send({ type: 'INVENTORY_UPDATE', payload: { items: session.inventory.toPayload() } })
     session.send({ type: 'ROOM_ENTER', payload: room.toPayload() })
     session.sendLog(`你拿起了 ${item.itemId}。`, 'item')
@@ -20,6 +21,7 @@ export class ItemAction {
     const ok = await session.inventory.removeItem(payload.itemId)
     if (!ok) { session.sendLog('你沒有這個東西。', 'item'); return }
     room.floorItems.push({ itemId: payload.itemId, quantity: 1 })
+    await session.appendRoomItemDelta(room.id, payload.itemId, 1)
     session.send({ type: 'INVENTORY_UPDATE', payload: { items: session.inventory.toPayload() } })
     session.send({ type: 'ROOM_ENTER', payload: room.toPayload() })
     session.sendLog(`你丟下了 ${payload.itemId}。`, 'item')

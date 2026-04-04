@@ -46,7 +46,7 @@ export function attachWsServer(httpServer: Server) {
 
     const session = new GameSession(ws, token, player, state, skills, inventory)
     sessionMap.set(token, session)
-    session.start()
+    await session.start()
 
     ws.on('message', (raw) => {
       try {
