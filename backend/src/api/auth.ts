@@ -1,9 +1,10 @@
 import { Router, Request, Response } from 'express'
 import { nanoid } from 'nanoid'
-import { createSession, getSessionByToken } from '../db/queries/session'
+import { createSession, deleteSessionByToken, getSessionByToken } from '../db/queries/session'
 import { createPlayer, getPlayerById, initPlayerState, updateDisplayName, applyInitialStats, getPlayerByUsername } from '../db/queries/player'
-import { createAccount, verifyAccountPassword } from '../db/queries/account'
+import { createAccount, hasAccountByPlayerId, verifyAccountPassword } from '../db/queries/account'
 import { generateGuestName } from '../utils/guestNameGen'
+import { isGuestSessionExpired } from '../auth/guestPolicy'
 
 const router = Router()
 
@@ -86,9 +87,25 @@ router.post('/register', async (req: Request, res: Response) => {
     return res.status(400).json({ error: '屬性分配無效（基礎 10 點，每項上限 25，額外點數需剛好 30）' })
   }
 
-  const existing = await getPlayerByUsername(normalizedUsername)
-  if (existing) {
+  const existingAccount = await getPlayerByUsername(normalizedUsername)
+  if (existingAccount) {
     return res.status(409).json({ error: '帳號已存在' })
+  }
+
+  const existingToken = getToken(req)
+  if (existingToken) {
+    const session = await getSessionByToken(existingToken)
+    if (session?.player_id) {
+      const alreadyRegistered = await hasAccountByPlayerId(session.player_id)
+      if (!alreadyRegistered) {
+        await updateDisplayName(session.player_id, normalizedDisplayName)
+        await applyInitialStats(session.player_id, statAlloc)
+        await createAccount(session.player_id, normalizedUsername, password)
+        const upgraded = await getPlayerById(session.player_id)
+        if (!upgraded) return res.status(404).json({ error: '角色不存在' })
+        return res.json({ token: existingToken, playerId: upgraded.id, displayName: upgraded.display_name })
+      }
+    }
   }
 
   const player = await createPlayer(normalizedDisplayName, normalizedDisplayName)
@@ -147,10 +164,21 @@ router.get('/me', async (req: Request, res: Response) => {
   const session = await getSessionByToken(token)
   if (!session?.player_id) return res.status(401).json({ error: 'Invalid session' })
 
+  if (await isGuestSessionExpired(session)) {
+    return res.status(403).json({ error: '訪客試玩已超時，請註冊正式帳號或重新登入。', code: 'GUEST_TIMEOUT' })
+  }
+
   const player = await getPlayerById(session.player_id)
   if (!player) return res.status(404).json({ error: 'Player not found' })
 
   res.json({ playerId: player.id, displayName: player.display_name, guestName: player.guest_name })
+})
+
+router.post('/logout', async (req: Request, res: Response) => {
+  const token = getToken(req)
+  if (!token) return res.json({ ok: true })
+  await deleteSessionByToken(token)
+  res.json({ ok: true })
 })
 
 export default router

@@ -38,6 +38,20 @@ Migrate core gameplay runtime for character movement and actions from mostly in-
 - Added full onboarding sequence: account registration/login + stat allocation in welcome flow.
 - Backend now supports `/api/auth/register` and `/api/auth/login` with `player_accounts` persistence.
 - Registration stat allocation writes initial `player_state` combat stats and derived vitals.
+- Welcome onboarding UI now supports vertical scrolling on smaller screens (`GuestWelcome` uses its own `overflow-y: auto` container despite global body lock).
+- Skill requirement alignment fixed: `skill:level` prerequisites are now parsed correctly instead of being treated as plain skill IDs.
+- Training and quest gating now reflect allocated stats/combat readiness:
+  - training gain/cost scale with stats + skill metadata (`learnBonus`, `successRate`, `powerPoint`, `martialType`)
+  - quest assignment checks combat experience threshold and current qi/jing readiness
+- Guest account policy implemented and trial-validated:
+  - free guest play window = 60 minutes
+  - after timeout, gameplay APIs/WS are blocked with `GUEST_TIMEOUT`
+  - guest can still register (upgrade) or logout after timeout
+  - active guest WS session is auto-closed at timeout with `GUEST_TIMEOUT`
+- End-to-end trial run completed:
+  - guest -> register-upgrade preserves player id/progress
+  - login works with username/password for upgraded account
+  - timeout enforcement confirmed on `/api/player/state` and live WS session
 
 ## Target Data Model (Phase A)
 ### 1. Canonical world graph

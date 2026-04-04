@@ -8,21 +8,21 @@ export default function ActionBar({ dispatch }: Props) {
 
   if (inCombat) return (
     <div className="box" style={{ display:'flex', gap:'6px', padding:'6px 10px' }}>
-      <button className="danger" onClick={() => dispatch('FLEE')}>逃跑</button>
-      <button onClick={() => dispatch('LOOK')}>觀察</button>
+      <button title="MUD 指令: flee" className="danger" onClick={() => dispatch('FLEE')}>逃跑</button>
+      <button title="MUD 指令: look" onClick={() => dispatch('LOOK')}>觀察</button>
     </div>
   )
 
   return (
     <div className="box" style={{ display:'flex', gap:'6px', flexWrap:'wrap', padding:'6px 10px' }}>
-      <button onClick={() => dispatch('LOOK')}>察看</button>
-      <button onClick={() => dispatch('REST')}>調息</button>
+      <button title="MUD 指令: look" onClick={() => dispatch('LOOK')}>察看</button>
+      <button title="MUD 指令: rest" onClick={() => dispatch('REST')}>調息</button>
       {room?.npcs.filter(n => n.alive && n.attitude === 'hostile').map(n => (
-        <button key={n.id} className="danger"
+        <button key={n.id} className="danger" title={`MUD 指令: attack ${n.name} / fight ${n.name}`}
           onClick={() => dispatch('ATTACK', { targetId: n.id })}>攻擊 {n.name}</button>
       ))}
       {room?.npcs.filter(n => n.alive && n.attitude !== 'hostile').map(n => (
-        <button key={n.id}
+        <button key={n.id} title={`MUD 指令: talk ${n.name}`}
           onClick={() => useGameStore.getState().openDialog(n.id, n.name)}>交談 {n.name}</button>
       ))}
     </div>

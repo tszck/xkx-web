@@ -21,10 +21,10 @@ export default function NpcList({ npcs, dispatch }: Props) {
           {!inCombat && (
             <>
               {npc.attitude !== 'hostile' && (
-                <button style={{ fontSize:11, padding:'1px 6px' }}
+                <button style={{ fontSize:11, padding:'1px 6px' }} title={`MUD 指令: talk ${npc.name}`}
                   onClick={() => openDialog(npc.id, npc.name)}>交談</button>
               )}
-              <button style={{ fontSize:11, padding:'1px 6px', color:'var(--red)', borderColor:'#662222' }}
+              <button style={{ fontSize:11, padding:'1px 6px', color:'var(--red)', borderColor:'#662222' }} title={`MUD 指令: attack ${npc.name} / fight ${npc.name}`}
                 onClick={() => dispatch('ATTACK', { targetId: npc.id })}>攻擊</button>
             </>
           )}

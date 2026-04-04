@@ -1,5 +1,7 @@
 import { query } from '../pool'
 
+const NEW_PLAYER_SPAWN_ROOM = '/d/city/kedian'
+
 export interface DBPlayer {
   id: number
   display_name: string
@@ -53,10 +55,10 @@ export async function updateDisplayName(playerId: number, name: string) {
 
 export async function initPlayerState(playerId: number): Promise<DBPlayerState> {
   const r = await query<DBPlayerState>(
-    `INSERT INTO player_state (player_id) VALUES ($1)
+    `INSERT INTO player_state (player_id, current_room) VALUES ($1, $2)
      ON CONFLICT (player_id) DO UPDATE SET updated_at=now()
      RETURNING *`,
-    [playerId]
+    [playerId, NEW_PLAYER_SPAWN_ROOM]
   )
   return r.rows[0]
 }

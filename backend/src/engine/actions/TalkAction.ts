@@ -60,6 +60,18 @@ export class TalkAction {
   }
 
   private async handleQuestTopic(session: GameSession, npcName: string) {
+    const qiRatio = session.state.maxQi > 0 ? session.state.qi / session.state.maxQi : 0
+    const jingRatio = session.state.maxJing > 0 ? session.state.jing / session.state.maxJing : 0
+
+    if (session.state.combatExp < 50) {
+      session.send({ type: 'DIALOG', payload: { npcName, text: '你江湖歷練尚淺，先多走動練功，再來接委託。' } })
+      return
+    }
+    if (qiRatio < 0.6 || jingRatio < 0.6) {
+      session.send({ type: 'DIALOG', payload: { npcName, text: '你氣血未復，先調息再談任務。' } })
+      return
+    }
+
     const existing = await questManager.getActiveDynamicQuest(session)
     if (existing) {
       session.send({ type: 'DIALOG', payload: { npcName, text: '你手上已有任務，先完成再來。' } })

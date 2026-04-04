@@ -52,3 +52,11 @@ export async function verifyAccountPassword(username: string, password: string):
   if (!verifyPassword(password, account.password_hash)) return null
   return { playerId: account.player_id }
 }
+
+export async function hasAccountByPlayerId(playerId: number): Promise<boolean> {
+  const r = await query<{ player_id: number }>(
+    `SELECT player_id FROM player_accounts WHERE player_id = $1`,
+    [playerId]
+  )
+  return (r.rowCount ?? 0) > 0
+}

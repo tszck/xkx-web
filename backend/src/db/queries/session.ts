@@ -4,6 +4,7 @@ export interface DBSession {
   id: string
   token: string
   player_id: number | null
+  created_at: Date
   last_seen_at: Date
 }
 
@@ -25,4 +26,8 @@ export async function getSessionByToken(token: string): Promise<DBSession | null
 
 export async function linkSessionToPlayer(token: string, playerId: number) {
   await query(`UPDATE sessions SET player_id=$1 WHERE token=$2`, [playerId, token])
+}
+
+export async function deleteSessionByToken(token: string) {
+  await query(`DELETE FROM sessions WHERE token=$1`, [token])
 }

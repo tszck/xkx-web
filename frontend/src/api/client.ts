@@ -22,6 +22,10 @@ export function setToken(token: string) {
   localStorage.setItem('xkx_token', token)
 }
 
+export function clearToken() {
+  localStorage.removeItem('xkx_token')
+}
+
 export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const apiUrl = getConfiguredApiUrl()
   const token = getToken()

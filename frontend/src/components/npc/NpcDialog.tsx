@@ -25,8 +25,8 @@ export default function NpcDialog({ dispatch }: Props) {
           <input value={topic} onChange={e => setTopic(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && send()}
             placeholder="詢問話題（Enter 送出）" />
-          <button onClick={send}>詢問</button>
-          <button onClick={closeDialog}>離開</button>
+          <button onClick={send} title={`MUD 指令: talk ${dialogNpc.name}${topic ? ' ' + topic : ''}`}>詢問</button>
+          <button onClick={closeDialog} title="MUD 指令: bye / close">離開</button>
         </div>
       </div>
     </div>

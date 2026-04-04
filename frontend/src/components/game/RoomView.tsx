@@ -18,7 +18,7 @@ export default function RoomView({ dispatch }: Props) {
       {room.items.length > 0 && (
         <div className="room-items">
           {room.items.map(item => (
-            <button key={item.itemId} className="item-chip"
+            <button key={item.itemId} className="item-chip" title={`MUD 指令: get ${item.itemId}`}
               onClick={() => dispatch('GET_ITEM', { itemId: item.itemId })}>
               拾取 {item.itemId} ×{item.quantity}
             </button>

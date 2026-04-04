@@ -1,4 +1,4 @@
-import { apiFetch, setToken } from './client'
+import { apiFetch, clearToken, setToken } from './client'
 
 export interface GuestResponse {
   token: string
@@ -53,4 +53,12 @@ export async function getMe(): Promise<GuestResponse | null> {
 
 export async function renamePlayer(name: string): Promise<{ ok: boolean; displayName: string }> {
   return apiFetch('/auth/rename', { method: 'POST', body: JSON.stringify({ name }) })
+}
+
+export async function logout(): Promise<void> {
+  try {
+    await apiFetch('/auth/logout', { method: 'POST' })
+  } finally {
+    clearToken()
+  }
 }

@@ -4,6 +4,7 @@ import { AttackAction } from './AttackAction'
 import { TalkAction } from './TalkAction'
 import { ItemAction } from './ItemAction'
 import { TrainAction } from './TrainAction'
+import { buildLookActionHint } from './RawActionCatalog'
 
 export type ClientAction =
   | { type: 'MOVE';        payload: { direction: string } }
@@ -63,6 +64,7 @@ export class ActionHandler {
       case 'LOOK':
         if (session.currentRoom) {
           session.send({ type: 'ROOM_ENTER', payload: session.currentRoom.toPayload() })
+          session.sendLog(buildLookActionHint(session), 'system')
         }
         await session.logAction('LOOK', { target: action.payload?.target ?? null }, 'OK')
         break

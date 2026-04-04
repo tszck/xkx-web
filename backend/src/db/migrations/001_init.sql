@@ -20,7 +20,7 @@ CREATE TABLE players (
 
 CREATE TABLE player_state (
   player_id      BIGINT PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
-  current_room   TEXT NOT NULL DEFAULT '/d/city/beimen',
+  current_room   TEXT NOT NULL DEFAULT '/d/city/kedian',
   qi             INT NOT NULL DEFAULT 100,
   max_qi         INT NOT NULL DEFAULT 100,
   jing           INT NOT NULL DEFAULT 100,

@@ -41,19 +41,21 @@ export default function ExitButtons({ dispatch }: Props) {
       <div className="compass">
         {DIRS.map(([dir, label]) => dir ? (
           <button key={dir} disabled={!exits[dir]} onClick={() => move(dir)}
+            title={`MUD 指令: ${dir}`}
             className={`exit-btn ${exits[dir] ? 'active' : ''}`}>{label}</button>
         ) : <span key="c" className="compass-center">·</span>)}
       </div>
       <div className="vert-exits">
         {VERT.map(([dir, label]) => (
           <button key={dir} disabled={!exits[dir]} onClick={() => move(dir)}
+            title={`MUD 指令: ${dir}`}
             className={`exit-btn vert ${exits[dir] ? 'active' : ''}`}>{label}</button>
         ))}
       </div>
       {extraExits.length > 0 && (
         <div className="extra-exits">
           {extraExits.map(dir => (
-            <button key={dir} onClick={() => move(dir)} className="extra-exit-btn">
+            <button key={dir} title={`MUD 指令: ${dir}`} onClick={() => move(dir)} className="extra-exit-btn">
               {labelForExit(dir)}
             </button>
           ))}

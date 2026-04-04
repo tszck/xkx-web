@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useGameStore } from './store'
 import { createGuestSession, getMe, loginAccount, registerAccount } from './api/auth'
-import { getToken } from './api/client'
+import { clearToken, getToken } from './api/client'
 import { getPlayerState } from './api/player'
 import { useGameSocket } from './ws/useGameSocket'
 import GuestWelcome from './components/auth/GuestWelcome'
@@ -39,6 +39,7 @@ export default function App() {
           }
         }
       } catch (err) {
+        clearToken()
         setStartupError(err instanceof Error ? err.message : '前端部署設定錯誤，無法連線到後端。')
       }
       setLoading(false)

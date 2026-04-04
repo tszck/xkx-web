@@ -40,9 +40,22 @@ export class SkillBook {
       if (prereq.startsWith('family:')) {
         const needed = prereq.slice(7)
         if (familyName !== needed) return false
-      } else {
-        if (this.getLevel(prereq) < 10) return false
+        continue
       }
+
+      const parts = prereq.split(':')
+      if (parts.length === 2) {
+        const [requiredSkillId, requiredLevelRaw] = parts
+        const requiredLevel = Number(requiredLevelRaw)
+        if (!requiredSkillId || !Number.isFinite(requiredLevel)) {
+          if (this.getLevel(prereq) < 10) return false
+          continue
+        }
+        if (this.getLevel(requiredSkillId) < requiredLevel) return false
+        continue
+      }
+
+      if (this.getLevel(prereq) < 10) return false
     }
     return true
   }
