@@ -447,6 +447,23 @@ Each patch = run migration tools for that domain's LPC files → commit JSON →
 - Added runtime guards so GitHub Pages surfaces a clear configuration error instead of posting back to itself when API/WS URLs are missing
 - Added guest-start error UI so broken API config surfaces a clear message instead of an unhandled promise rejection
 
+### World Data SQL Migration Plan (2026-04-04)
+- [x] Add SQL migration `002_world_data.sql` with `world_rooms`, `world_npcs`, `world_items`, `world_skills`
+- [x] Add import tool `tools/import-world-to-db.ts` to upsert all JSON world data into PostgreSQL
+- [x] Add backend config switch `WORLD_DATA_SOURCE` and loader support (`json` -> fallback, `db` preferred)
+- [x] Run DB migrations (`001_init.sql`, `002_world_data.sql`) in target database
+- [x] Execute `npm run import:world` and validate row counts match JSON corpus
+- [x] Switch backend runtime `WORLD_DATA_SOURCE=db` and restart PM2
+- [x] Validate API parity (`/api/world/rooms`, sample room/npc/item/skill endpoints)
+
+### World Data SQL Migration Validation (2026-04-04)
+- Tables created: `world_rooms`, `world_npcs`, `world_items`, `world_skills`
+- Import result: `rooms:5600`, `npcs:1617`, `items:764`, `skills:572`
+- Source-vs-DB counts: exact match (`skills` excludes `names.json` by design)
+- Runtime switched to DB source: PM2 env `WORLD_DATA_SOURCE=db`
+- Live startup log: `World loaded (db): 5600 rooms, 1617 npcs, 764 items, 572 skills`
+- Public API parity checks: `/api/world/rooms` length `5600`, sample room/npc/item/skill endpoints return expected IDs
+
 ---
 
 ## Critical Reference Files in LPC Source

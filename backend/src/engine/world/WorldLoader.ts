@@ -1,5 +1,7 @@
 import fs from 'fs'
 import path from 'path'
+import { pool } from '../../db/pool'
+import { config } from '../../config'
 
 export interface RoomDef {
   id: string
@@ -69,12 +71,42 @@ class WorldLoader {
 
   async load() {
     if (this.loaded) return
-    await this.loadDir('rooms', this.rooms)
-    await this.loadDir('npcs', this.npcs)
-    await this.loadDir('items', this.items)
-    await this.loadSkills()
+
+    const source = config.worldDataSource === 'db' ? 'db' : 'json'
+    const loadedFromDb = source === 'db' ? await this.loadFromDb() : false
+    if (!loadedFromDb) {
+      await this.loadDir('rooms', this.rooms)
+      await this.loadDir('npcs', this.npcs)
+      await this.loadDir('items', this.items)
+      await this.loadSkills()
+    }
+
     this.loaded = true
-    console.log(`World loaded: ${this.rooms.size} rooms, ${this.npcs.size} npcs, ${this.items.size} items, ${this.skills.size} skills`)
+    const actualSource = loadedFromDb ? 'db' : 'json'
+    console.log(`World loaded (${actualSource}): ${this.rooms.size} rooms, ${this.npcs.size} npcs, ${this.items.size} items, ${this.skills.size} skills`)
+  }
+
+  private async loadFromDb(): Promise<boolean> {
+    try {
+      const [roomRows, npcRows, itemRows, skillRows] = await Promise.all([
+        pool.query<{ id: string; data: RoomDef }>('SELECT id, data FROM world_rooms'),
+        pool.query<{ id: string; data: NpcDef }>('SELECT id, data FROM world_npcs'),
+        pool.query<{ id: string; data: ItemDef }>('SELECT id, data FROM world_items'),
+        pool.query<{ id: string; data: SkillDef }>('SELECT id, data FROM world_skills'),
+      ])
+
+      if (roomRows.rowCount === 0 || npcRows.rowCount === 0 || itemRows.rowCount === 0 || skillRows.rowCount === 0) {
+        return false
+      }
+
+      roomRows.rows.forEach(row => this.rooms.set(row.id, row.data))
+      npcRows.rows.forEach(row => this.npcs.set(row.id, row.data))
+      itemRows.rows.forEach(row => this.items.set(row.id, row.data))
+      skillRows.rows.forEach(row => this.skills.set(row.id, row.data))
+      return true
+    } catch {
+      return false
+    }
   }
 
   private async loadDir<T>(subdir: string, map: Map<string, T>) {
