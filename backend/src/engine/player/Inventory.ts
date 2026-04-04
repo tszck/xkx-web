@@ -15,7 +15,13 @@ export class Inventory {
 
   constructor(playerId: number, rows: Array<{ id: number; item_id: string; quantity: number; slot: string | null; extra_data: unknown }>) {
     this.playerId = playerId
-    this.items = rows.map(r => ({ id: r.id, itemId: r.item_id, quantity: r.quantity, slot: r.slot, extra_data: r.extra_data })) as InventoryItem[]
+    this.items = rows.map(r => ({
+      id: r.id,
+      itemId: r.item_id,
+      quantity: r.quantity,
+      slot: r.slot,
+      extraData: r.extra_data,
+    }))
   }
 
   getAll() { return this.items }

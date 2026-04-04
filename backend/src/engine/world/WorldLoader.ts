@@ -57,7 +57,8 @@ export interface SkillDef {
   prerequisites: string[]
 }
 
-const DATA_DIR = path.join(__dirname, '../../data')
+// Use src/data for both tsx dev and compiled dist runtime.
+const DATA_DIR = path.join(__dirname, '../../../src/data')
 
 class WorldLoader {
   private rooms = new Map<string, RoomDef>()

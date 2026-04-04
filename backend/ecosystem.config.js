@@ -9,6 +9,8 @@ module.exports = {
     env: {
       NODE_ENV: 'production',
       PORT: 3000,
+      DATABASE_URL: process.env.DATABASE_URL || 'postgresql://xkx:password@localhost:5432/xkx_game',
+      CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:5173',
     },
     error_file: '/var/log/xkx/error.log',
     out_file: '/var/log/xkx/out.log',

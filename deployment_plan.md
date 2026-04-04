@@ -335,8 +335,7 @@ Each patch = run migration tools for that domain's LPC files → commit JSON →
 
 ## Implementation Phases
 
-> **Status as of 2026-04-02 — ~85% complete. Phases 1–6 done, Phase 7 partially done, Phase 8 not started.**
-> Next agent: start with `DynamicQuest.ts` (Phase 7 remainder), then work through Phase 8 top-to-bottom.
+> **Status as of 2026-04-04 — ~92% complete. Phases 1–6 done, Phase 7 partially done, Phase 8 code hardening done and validated.**
 > LPC source reference files are at `/root/projects/xkx/` on the same machine (not in this repo).
 
 ### Phase 1 — Infrastructure ✅ DONE
@@ -389,18 +388,34 @@ Each patch = run migration tools for that domain's LPC files → commit JSON →
 - [ ] Verify `QUEST_ASSIGNED` / `QUEST_COMPLETE` events wired end-to-end to frontend quest log in `RightPanel`
 - [ ] **Test**: Receive quest from NPC, complete it, verify XP + score rewards
 
-### Phase 8 — Polish & Deployment ❌ NOT STARTED
-- [ ] Auto-save every 60s (`setInterval` in `GameSession.ts`) and on WS disconnect (`close` event handler)
-- [ ] Session restoration on reconnect: WS upgrade handler checks existing `GameSession` for token before creating new one
-- [ ] Rate limiting: add `express-rate-limit` middleware in `backend/src/index.ts`
-- [ ] WS action debounce: 500ms guard in `backend/src/ws/handler.ts` per connection
-- [ ] `pm2` already has `ecosystem.config.js` — confirm env vars and deploy on VPS
-- [ ] nginx reverse proxy on VPS: `/api` + `/ws` → `localhost:3000` (no config file committed yet)
-- [ ] `vite.config.ts`: read `VITE_WS_URL` + `VITE_API_URL` env vars; add secrets to GitHub Actions
-- [ ] Wire `RenameModal` end-to-end in `App.tsx` (component exists, confirm it's mounted and triggered)
-- [ ] Error handling audit: every WS action handler must send `{ type: "ERROR", payload: { code, message } }` on throw rather than crashing session
-- [ ] **DB**: check whether `002_player.sql` is needed or if `001_init.sql` already contains all tables
-- [ ] **Test**: Full smoke test (10 steps — see Verification section below)
+### Phase 8 — Polish & Deployment 🔶 IN PROGRESS
+- [x] Auto-save every 60s and on WS disconnect verified in code
+- [x] Session restoration on reconnect by token verified
+- [x] Rate limiting (`express-rate-limit`) enabled on `/api`
+- [x] WS action debounce (500ms per connection) enabled
+- [x] `pm2` config updated with `DATABASE_URL` and `CORS_ORIGIN` env passthrough defaults
+- [x] nginx reverse proxy template committed (`nginx.conf.example`)
+- [x] `vite.config.ts` reads `VITE_WS_URL` + `VITE_API_URL`; Actions workflow passes these values
+- [x] `RenameModal` fully wired with open trigger from `StatsPanel`
+- [x] WS handler wrapped with defensive try/catch to emit `{ type: "ERROR" }` on unexpected action errors
+- [x] DB migration check done: `001_init.sql` already complete; `002_player.sql` not needed
+- [x] Build validation: backend `tsc` pass, frontend `tsc && vite build` pass
+- [ ] **Ops smoke test on VPS** (full 10-step verification in Verification section)
+
+### Next Deployment To-Do (Ops)
+- [ ] On VPS, set production env vars before PM2 start:
+  - `DATABASE_URL=...`
+  - `CORS_ORIGIN=https://<your-domain>`
+- [ ] Build and start backend with PM2:
+  - `cd backend && npm run build`
+  - `pm2 start ecosystem.config.js && pm2 save`
+- [ ] Install nginx site from `nginx.conf.example`, replace domain/SSL paths, run `nginx -t`, reload nginx
+- [ ] Configure GitHub repo secrets:
+  - `VITE_WS_URL=wss://<your-domain>/ws`
+  - `VITE_API_URL=https://<your-domain>/api`
+- [ ] Set repo variable `VITE_BASE_PATH` (for Pages path mode)
+- [ ] Push to `main` and confirm frontend deploy workflow succeeds
+- [ ] Run full end-to-end 10-step smoke test (guest create, move, combat, loot, shop, equip, train, reconnect, rename)
 
 ---
 

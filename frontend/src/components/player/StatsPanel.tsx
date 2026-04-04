@@ -12,11 +12,26 @@ function Bar({ label, value, max, cls }: { label: string; value: number; max: nu
 }
 
 export default function StatsPanel() {
-  const { stats, displayName } = useGameStore()
+  const { stats, displayName, setRenameModal } = useGameStore()
 
   return (
     <div className="box" style={{ flexShrink: 0 }}>
-      <div className="box-title">{displayName || '俠客'}</div>
+      <button
+        type="button"
+        className="box-title"
+        style={{
+          width: '100%',
+          border: 'none',
+          background: 'transparent',
+          color: 'inherit',
+          textAlign: 'left',
+          padding: 0,
+          cursor: 'pointer',
+        }}
+        onClick={() => setRenameModal(true)}
+      >
+        {displayName || '俠客'} [改名]
+      </button>
       {stats ? (
         <>
           <Bar label="氣" value={stats.qi} max={stats.maxQi} cls="qi" />
