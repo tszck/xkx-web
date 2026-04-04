@@ -6,6 +6,7 @@ const router = Router()
 
 const RAW_XKX_DIR = process.env.RAW_XKX_DIR ?? '/root/projects/xkx'
 const TOPICS_FILE = path.join(RAW_XKX_DIR, 'help', 'help', 'topics')
+const HELP_DOC_DIR = path.join(RAW_XKX_DIR, 'doc', 'help')
 
 interface HelpTopicCatalogItem {
   key: string
@@ -61,6 +62,10 @@ function parseCatalog(text: string): HelpTopicCatalogItem[] {
   return out
 }
 
+function sanitizeTopicKey(input: string): string {
+  return input.replace(/[^a-zA-Z0-9_-]/g, '')
+}
+
 router.get('/topics', (_req: Request, res: Response) => {
   try {
     const raw = fs.readFileSync(TOPICS_FILE, 'utf-8')
@@ -93,6 +98,35 @@ router.get('/catalog', (_req: Request, res: Response) => {
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : '讀取幫助索引失敗'
+    res.status(500).json({ error: message })
+  }
+})
+
+router.get('/topic/:key', (req: Request, res: Response) => {
+  try {
+    const rawKey = String(req.params.key ?? '').trim()
+    const key = sanitizeTopicKey(rawKey)
+    if (!key) {
+      res.status(400).json({ error: '無效的 help 主題' })
+      return
+    }
+
+    const docPath = path.join(HELP_DOC_DIR, key)
+    if (!fs.existsSync(docPath)) {
+      res.status(404).json({ error: `找不到 help 主題：${key}` })
+      return
+    }
+
+    const raw = fs.readFileSync(docPath, 'utf-8')
+    const text = toTraditionalChinese(stripAnsi(raw))
+    res.json({
+      key,
+      title: `help ${key}`,
+      text,
+      updatedAt: new Date().toISOString(),
+    })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : '讀取幫助主題失敗'
     res.status(500).json({ error: message })
   }
 })

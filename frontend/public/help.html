@@ -162,11 +162,27 @@
       }
 
       .empty,
-      .raw {
+      .raw,
+      .doc {
         border: 1px solid var(--line);
         border-radius: 9px;
         background: #fffef8;
         padding: 14px;
+      }
+
+      .doc-title {
+        margin: 16px 0 10px;
+        color: var(--accent-strong);
+        font-size: 18px;
+      }
+
+      .doc {
+        font-family: "Sarasa Mono TC", "Noto Sans Mono CJK TC", monospace;
+        white-space: pre-wrap;
+        line-height: 1.68;
+        font-size: 12px;
+        max-height: 50vh;
+        overflow: auto;
       }
 
       .raw {
@@ -216,6 +232,8 @@
         <p class="meta" id="meta">載入中…</p>
         <div id="grid" class="grid"></div>
         <div id="empty" class="empty hidden">找不到符合的主題。</div>
+        <h2 class="doc-title hidden" id="doc-title"></h2>
+        <pre id="doc" class="doc hidden"></pre>
         <pre id="raw" class="raw hidden"></pre>
       </main>
     </div>
@@ -238,6 +256,24 @@
       function getTopicQuery() {
         const q = new URLSearchParams(window.location.search).get('q')
         return q ? q.trim() : ''
+      }
+
+      async function loadTopicDocument(apiBaseUrl, topic) {
+        const titleEl = document.getElementById('doc-title')
+        const docEl = document.getElementById('doc')
+        if (!topic) {
+          titleEl.classList.add('hidden')
+          docEl.classList.add('hidden')
+          return
+        }
+
+        const res = await fetch(`${apiBaseUrl}/help/topic/${encodeURIComponent(topic)}`)
+        if (!res.ok) throw new Error(`topic HTTP ${res.status}`)
+        const doc = await res.json()
+        titleEl.textContent = `help ${doc.key}`
+        docEl.textContent = doc.text || '無內容'
+        titleEl.classList.remove('hidden')
+        docEl.classList.remove('hidden')
       }
 
       function renderTopics(topics, query) {
@@ -269,8 +305,14 @@
             const command = `help ${it.key}`
             try {
               await navigator.clipboard.writeText(command)
-              alert(`已複製指令：${command}`)
+              await loadTopicDocument(window.__HELP_API_BASE_URL__, it.key)
+              alert(`已複製指令：${command}\n並載入主題內容。`)
             } catch (_err) {
+              try {
+                await loadTopicDocument(window.__HELP_API_BASE_URL__, it.key)
+              } catch (_) {
+                // ignore nested topic load failure here; main try/catch handles startup load
+              }
               alert(`請在遊戲中輸入：${command}`)
             }
           })
@@ -288,6 +330,7 @@
         const searchEl = document.getElementById('search')
         const toggleRawEl = document.getElementById('toggle-raw')
         const apiBaseUrl = getApiBaseUrl()
+        window.__HELP_API_BASE_URL__ = apiBaseUrl
 
         try {
           const [catalogRes, topicsRes] = await Promise.all([
@@ -311,6 +354,7 @@
             searchEl.value = initialQuery
             renderTopics(topics, initialQuery)
             metaEl.textContent = `查詢「${initialQuery}」：共 ${topics.length} 個主題，可點擊卡片複製 help 指令。`
+            await loadTopicDocument(apiBaseUrl, initialQuery)
           }
 
           searchEl.addEventListener('input', () => {

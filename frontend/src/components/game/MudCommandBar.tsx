@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useGameStore } from '../../store'
 import type { ClientActionType } from '../../ws/messageTypes'
 import { parseMudCommand } from '../../game/commandParser'
+import { getHelpTopic } from '../../api/help'
 import './MudCommandBar.css'
 
 interface Props {
@@ -60,6 +61,17 @@ export default function MudCommandBar({ dispatch }: Props) {
       const base = onPages ? '/xkx-web/help.html' : '/help.html'
       const query = result.helpQuery ? `?q=${encodeURIComponent(result.helpQuery)}` : ''
       window.open(`${base}${query}`, '_blank', 'noopener,noreferrer')
+
+      if (result.helpQuery) {
+        void getHelpTopic(result.helpQuery)
+          .then((doc) => {
+            const preview = doc.text.slice(0, 1800)
+            pushLocalLog(`【help ${doc.key}】\n${preview}${doc.text.length > preview.length ? '\n...(已截斷，完整內容請見 help.html)' : ''}`)
+          })
+          .catch(() => {
+            pushLocalLog(`找不到 help 主題：${result.helpQuery}`)
+          })
+      }
     }
 
     result.actions.forEach(action => dispatch(action.type, action.payload))
