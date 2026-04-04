@@ -118,6 +118,7 @@ class WorldLoader {
         if (!entry.name.endsWith('.json')) continue
         try {
           const data = JSON.parse(fs.readFileSync(path.join(d, entry.name), 'utf-8')) as T & { id: string }
+          if (typeof data.id !== 'string' || !data.id) continue
           map.set(data.id, data)
         } catch (e) {
           console.warn(`Failed to load ${entry.name}:`, e)

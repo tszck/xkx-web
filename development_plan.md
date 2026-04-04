@@ -26,6 +26,10 @@ Migrate core gameplay runtime for character movement and actions from mostly in-
 - Combat state now round-trips through `player_action_state`; room item deltas round-trip through `player_room_overrides`.
 - Step 5 tick and action auditing is complete and validated.
 - `player_tick_state` advances on tick; accepted actions are written to `player_action_log` in order.
+- Data completeness validation passed against the parsed source corpus and the DB-backed runtime loader.
+- Source/DB parity: rooms=5600, npcs=1617, items=764, skills=572.
+- Runtime parity: exits=273, npc_spawns=3220, item_spawns=0.
+- `WorldLoader` now skips non-record JSON like `skills/names.json`, so DB-backed loading reports the same 572 skills as the corpus.
 
 ## Target Data Model (Phase A)
 ### 1. Canonical world graph
