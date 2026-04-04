@@ -412,19 +412,19 @@ Each patch = run migration tools for that domain's LPC files → commit JSON →
 ### Next Deployment To-Do (Ops)
 - [x] On VPS, set runtime env vars before PM2 start (executed in shell for current session)
   - `DATABASE_URL=postgresql://xkx:xkx_dev_pass@localhost:5432/xkx_game`
-  - `CORS_ORIGIN=http://localhost:5173`
+  - `CORS_ORIGIN=https://tszck.github.io`
 - [x] Build and start backend with PM2
   - `cd backend && npm run build`
   - `pm2 restart xkx-backend --update-env && pm2 save`
-- [ ] Install nginx site from `nginx.conf.example`, replace domain/SSL paths, run `nginx -t`, reload nginx
-  - Blocker: `nginx` is not installed in current environment
-- [ ] Configure GitHub repo secrets:
-  - `VITE_WS_URL=wss://<your-domain>/ws`
-  - `VITE_API_URL=https://<your-domain>/api`
-  - Blocker: public domain not provided yet
+- [x] Install public reverse proxy (Caddy) and expose backend
+  - Active hostname: `xkx.87.106.31.154.sslip.io`
+  - Routing: `/api` + `/ws` -> `localhost:3101`
+- [x] Configure GitHub repo secrets:
+  - `VITE_WS_URL=wss://xkx.87.106.31.154.sslip.io/ws`
+  - `VITE_API_URL=https://xkx.87.106.31.154.sslip.io/api`
 - [x] Set repo variable `VITE_BASE_PATH` (for Pages path mode)
   - Set to `/xkx-web/` via `gh variable set`
-- [ ] Push to `main` and confirm frontend deploy workflow succeeds
+- [x] Push to `main` and confirm frontend deploy workflow succeeds
 - [ ] Run full end-to-end 10-step smoke test (guest create, move, combat, loot, shop, equip, train, reconnect, rename)
 
 ### Ops Validation Log (2026-04-04)
@@ -435,6 +435,9 @@ Each patch = run migration tools for that domain's LPC files → commit JSON →
 - API validation pass: `POST /api/auth/guest` returned token/player payload
 - WS validation pass: gameplay action path responds (`LOOK` -> `ROOM_ENTER`)
 - GitHub Actions variable configured: `VITE_BASE_PATH=/xkx-web/`
+- Caddy configured with public TLS endpoint: `xkx.87.106.31.154.sslip.io`
+- Public API validation pass: `POST https://xkx.87.106.31.154.sslip.io/api/auth/guest` -> 200
+- Public WSS validation pass: `wss://xkx.87.106.31.154.sslip.io/ws` gameplay message flow works
 
 ### Frontend Deploy Hardening (2026-04-04)
 - Added favicon asset and HTML icon link to eliminate default `/favicon.ico` 404 on Pages
