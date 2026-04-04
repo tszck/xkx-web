@@ -30,6 +30,8 @@ Migrate core gameplay runtime for character movement and actions from mostly in-
 - Source/DB parity: rooms=5600, npcs=1617, items=764, skills=572.
 - Runtime parity: exits=273, npc_spawns=3220, item_spawns=0.
 - `WorldLoader` now skips non-record JSON like `skills/names.json`, so DB-backed loading reports the same 572 skills as the corpus.
+- Frontend now supports dual control modes: MUD command input + keyboard shortcuts while preserving existing click/tap controls.
+- Local browser smoke test passed on isolated local ports (`frontend:5174`, `backend:3001`): guest login + LOOK/REST/MOVE/TALK/TRAIN/ATTACK/FLEE/PING action surface succeeded with no `UNKNOWN_ACTION` errors.
 
 ## Target Data Model (Phase A)
 ### 1. Canonical world graph

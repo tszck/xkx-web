@@ -2,6 +2,7 @@ import type { ClientActionType } from '../../ws/messageTypes'
 import RoomView from '../game/RoomView'
 import ExitButtons from '../game/ExitButtons'
 import ActionBar from '../game/ActionBar'
+import MudCommandBar from '../game/MudCommandBar'
 import EventLog from '../game/EventLog'
 import CombatHUD from '../game/CombatHUD'
 import './CenterPanel.css'
@@ -17,6 +18,7 @@ export default function CenterPanel({ dispatch }: Props) {
       <CombatHUD dispatch={dispatch} />
       <ExitButtons dispatch={dispatch} />
       <ActionBar dispatch={dispatch} />
+      <MudCommandBar dispatch={dispatch} />
       <EventLog />
     </div>
   )
