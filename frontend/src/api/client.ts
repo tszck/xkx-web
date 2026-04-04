@@ -52,6 +52,7 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
   const apiUrl = getConfiguredApiUrl()
   const candidateApiUrls = getCandidateApiUrls(apiUrl)
   const token = getToken()
+  const hasBody = options?.body !== undefined && options?.body !== null
 
   let lastNetworkError: unknown = null
   for (const baseUrl of candidateApiUrls) {
@@ -59,7 +60,7 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
       const res = await fetch(`${baseUrl}${path}`, {
         ...options,
         headers: {
-          'Content-Type': 'application/json',
+          ...(hasBody ? { 'Content-Type': 'application/json' } : {}),
           ...(token ? { 'X-Session-Token': token } : {}),
           ...(options?.headers ?? {}),
         },

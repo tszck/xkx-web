@@ -6,6 +6,17 @@ import apiRouter from './api/router'
 import { attachWsServer } from './ws/server'
 import { worldLoader } from './engine/world/WorldLoader'
 
+function isOriginAllowed(origin: string | undefined): boolean {
+  if (!origin) return true
+  const allowList = config.corsOrigin
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+
+  if (allowList.length === 0) return true
+  return allowList.includes(origin)
+}
+
 async function main() {
   await worldLoader.load()
 
@@ -13,9 +24,19 @@ async function main() {
   app.use(express.json())
 
   app.use((_req, res, next) => {
-    res.header('Access-Control-Allow-Origin', config.corsOrigin)
+    const origin = _req.headers.origin
+    if (isOriginAllowed(origin)) {
+      res.header('Access-Control-Allow-Origin', origin ?? '*')
+      res.header('Vary', 'Origin')
+    }
     res.header('Access-Control-Allow-Headers', 'Content-Type, X-Session-Token')
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+
+    if (_req.method === 'OPTIONS') {
+      res.status(204).end()
+      return
+    }
+
     next()
   })
 
