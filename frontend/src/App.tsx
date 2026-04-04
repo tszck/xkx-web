@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useGameStore } from './store'
-import { createGuestSession, getMe } from './api/auth'
+import { createGuestSession, getMe, loginAccount, registerAccount } from './api/auth'
 import { getToken } from './api/client'
 import { getPlayerState } from './api/player'
 import { useGameSocket } from './ws/useGameSocket'
@@ -59,8 +59,49 @@ export default function App() {
     }
   }
 
+  const handleLogin = async (username: string, password: string) => {
+    setLoading(true)
+    setStartupError(null)
+    try {
+      const res = await loginAccount(username, password)
+      setAuth(res.token, res.playerId, res.displayName)
+      await hydrate()
+    } catch (err) {
+      setStartupError(err instanceof Error ? err.message : '登入失敗')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleRegister = async (payload: {
+    username: string
+    password: string
+    displayName: string
+    stats: { str: number; con: number; dex: number; int_stat: number; per: number; kar: number; sta: number; spi: number }
+  }) => {
+    setLoading(true)
+    setStartupError(null)
+    try {
+      const res = await registerAccount(payload)
+      setAuth(res.token, res.playerId, res.displayName)
+      await hydrate()
+    } catch (err) {
+      setStartupError(err instanceof Error ? err.message : '註冊失敗')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   if (loading) return <div className="loading">載入中…</div>
-  if (!token) return <GuestWelcome onStart={handleStart} error={startupError} />
+  if (!token) return (
+    <GuestWelcome
+      onGuest={handleStart}
+      onLogin={handleLogin}
+      onRegister={handleRegister}
+      loading={loading}
+      error={startupError}
+    />
+  )
 
   return (
     <>

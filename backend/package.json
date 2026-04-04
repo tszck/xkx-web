@@ -9,6 +9,7 @@
     "migrate:create": "node-pg-migrate -m src/db/migrations create",
     "import:world": "tsx tools/import-world-to-db.ts",
     "normalize:world": "tsx tools/normalize-world-db.ts",
+    "import:raw-exits": "tsx tools/import-raw-exits.ts",
     "validate:world-completeness": "tsx tools/validate-world-completeness.ts"
   },
   "dependencies": {

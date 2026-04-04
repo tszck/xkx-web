@@ -32,6 +32,12 @@ Migrate core gameplay runtime for character movement and actions from mostly in-
 - `WorldLoader` now skips non-record JSON like `skills/names.json`, so DB-backed loading reports the same 572 skills as the corpus.
 - Frontend now supports dual control modes: MUD command input + keyboard shortcuts while preserving existing click/tap controls.
 - Local browser smoke test passed on isolated local ports (`frontend:5174`, `backend:3001`): guest login + LOOK/REST/MOVE/TALK/TRAIN/ATTACK/FLEE/PING action surface succeeded with no `UNKNOWN_ACTION` errors.
+- Root cause for spawn-area lock confirmed and addressed: runtime exit graph was too sparse (`273` exits for `5600` rooms).
+- Added raw LPC exit importer `tools/import-raw-exits.ts` and reloaded runtime exits from source.
+- Runtime exit coverage after fix: `11882` exits total, `5373` rooms with at least one outgoing exit.
+- Added full onboarding sequence: account registration/login + stat allocation in welcome flow.
+- Backend now supports `/api/auth/register` and `/api/auth/login` with `player_accounts` persistence.
+- Registration stat allocation writes initial `player_state` combat stats and derived vitals.
 
 ## Target Data Model (Phase A)
 ### 1. Canonical world graph

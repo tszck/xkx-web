@@ -36,6 +36,17 @@ export async function getPlayerById(id: number): Promise<DBPlayer | null> {
   return r.rows[0] ?? null
 }
 
+export async function getPlayerByUsername(username: string): Promise<DBPlayer | null> {
+  const r = await query<DBPlayer>(
+    `SELECT p.*
+     FROM players p
+     JOIN player_accounts a ON a.player_id = p.id
+     WHERE a.username = $1`,
+    [username.toLowerCase()]
+  )
+  return r.rows[0] ?? null
+}
+
 export async function updateDisplayName(playerId: number, name: string) {
   await query(`UPDATE players SET display_name=$1, updated_at=now() WHERE id=$2`, [name, playerId])
 }
@@ -48,6 +59,59 @@ export async function initPlayerState(playerId: number): Promise<DBPlayerState> 
     [playerId]
   )
   return r.rows[0]
+}
+
+export interface PlayerStatAllocation {
+  str: number
+  con: number
+  dex: number
+  int_stat: number
+  per: number
+  kar: number
+  sta: number
+  spi: number
+}
+
+export async function applyInitialStats(playerId: number, stats: PlayerStatAllocation) {
+  const maxQi = 80 + stats.con * 3 + stats.str
+  const maxJing = 80 + stats.spi * 3 + stats.int_stat
+  const maxNeili = 20 + stats.int_stat * 2 + stats.con
+
+  await query(
+    `UPDATE player_state
+     SET str=$2,
+         con=$3,
+         dex=$4,
+         int_stat=$5,
+         per=$6,
+         kar=$7,
+         sta=$8,
+         spi=$9,
+         max_qi=$10,
+         qi=$10,
+         eff_qi=$10,
+         max_jing=$11,
+         jing=$11,
+         eff_jing=$11,
+         max_neili=$12,
+         neili=$12,
+         updated_at=now()
+     WHERE player_id=$1`,
+    [
+      playerId,
+      stats.str,
+      stats.con,
+      stats.dex,
+      stats.int_stat,
+      stats.per,
+      stats.kar,
+      stats.sta,
+      stats.spi,
+      maxQi,
+      maxJing,
+      maxNeili,
+    ]
+  )
 }
 
 export async function getPlayerState(playerId: number): Promise<DBPlayerState | null> {
