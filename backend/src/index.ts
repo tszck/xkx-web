@@ -45,7 +45,7 @@ async function main() {
   const server = http.createServer(app)
   attachWsServer(server)
 
-  server.listen(config.port, () => {
+  server.listen(config.port, '0.0.0.0', () => {
     console.log(`xkx-web backend running on port ${config.port}`)
   })
 }
