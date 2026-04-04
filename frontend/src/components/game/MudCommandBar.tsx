@@ -54,6 +54,14 @@ export default function MudCommandBar({ dispatch }: Props) {
     if (!line) return
 
     const result = parseMudCommand(line, context)
+
+    if (result.helpQuery !== undefined) {
+      const onPages = typeof window !== 'undefined' && window.location.pathname.startsWith('/xkx-web/')
+      const base = onPages ? '/xkx-web/help.html' : '/help.html'
+      const query = result.helpQuery ? `?q=${encodeURIComponent(result.helpQuery)}` : ''
+      window.open(`${base}${query}`, '_blank', 'noopener,noreferrer')
+    }
+
     result.actions.forEach(action => dispatch(action.type, action.payload))
     if (result.localMessage) pushLocalLog(result.localMessage)
 

@@ -14,6 +14,7 @@ export interface CommandContext {
 export interface CommandResult {
   actions: CommandAction[]
   localMessage?: string
+  helpQuery?: string
 }
 
 const DIR_ALIASES: Record<string, string> = {
@@ -124,10 +125,18 @@ export function parseMudCommand(input: string, context: CommandContext): Command
     return { actions: [{ type: 'TRAIN_SKILL', payload: { skillId, npcId: target.id } }] }
   }
 
-  if (cmd === 'help' || cmd === '?') {
+  if (cmd === 'help' || cmd === '?' || cmd === 'h' || cmd === '幫助' || cmd === '帮助') {
+    if (arg) {
+      return {
+        actions: [],
+        localMessage: `已查詢幫助主題：${arg}`,
+        helpQuery: arg,
+      }
+    }
     return {
       actions: [],
-      localMessage: '指令: n/s/e/w/ne/nw/se/sw/u/d/in/out, look, rest, attack, flee, talk, quest, get, drop, use, equip, train, ping',
+      localMessage: '指令: n/s/e/w/ne/nw/se/sw/u/d/in/out, look, rest, attack, flee, talk, quest, get, drop, use, equip, train, ping。輸入 help <主題> 可查詢幫助索引。',
+      helpQuery: '',
     }
   }
 
