@@ -9,7 +9,11 @@ const __dirname = path.dirname(__filename)
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') })
 
-const DATABASE_URL = process.env.DATABASE_URL ?? 'postgresql://xkx:password@localhost:5432/xkx_game'
+if (!process.env.DATABASE_URL) {
+  console.error('ERROR: DATABASE_URL environment variable must be set. Check .env file.')
+  process.exit(1)
+}
+const DATABASE_URL = process.env.DATABASE_URL
 const RAW_XKX_DIR = process.env.RAW_XKX_DIR ?? '/root/projects/xkx'
 
 interface ExitRow {

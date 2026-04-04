@@ -9,7 +9,7 @@ module.exports = {
     env: {
       NODE_ENV: 'production',
       PORT: 3001,
-      DATABASE_URL: process.env.DATABASE_URL || 'postgresql://xkx:password@localhost:5432/xkx_game',
+      DATABASE_URL: process.env.DATABASE_URL || (() => { throw new Error('FATAL: DATABASE_URL must be set in environment or .env file'); })(),
       CORS_ORIGIN: process.env.CORS_ORIGIN || 'https://tszck.github.io',
     },
     error_file: '/var/log/xkx/error.log',
