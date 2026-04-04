@@ -116,10 +116,11 @@ xkx-web/
 ## Architecture
 
 ```
-GitHub Pages (React SPA)
+GitHub Pages (React SPA)   https://tszck.github.io
     ↕  REST  (auth, save/load)        https://your-vps/api/
     ↕  WebSocket (game events)        wss://your-vps/ws?token=TOKEN
-VPS — Node.js (port 3000)
+          ↓ (Caddy reverse proxy)
+VPS — Node.js (port 3001)     xkx-web backend
     ↕
 PostgreSQL — player state, skills, inventory, quests
 ```
@@ -139,6 +140,23 @@ All messages are JSON with a `type` field.
 3. WS opened as `ws://host/ws?token=TOKEN`
 4. Player state restored from DB on connect; auto-saved every 60s and on disconnect
 5. Display name customizable via `POST /api/auth/rename`
+
+### Environment Variables (REQUIRED)
+
+The following environment variables **must** be explicitly set. Hardcoded defaults have been removed for security.
+
+**`DATABASE_URL` — REQUIRED**
+- Format: `postgresql://username:password@host:port/database`
+- Development: Already set in `backend/.env` 
+- Production: Must be set before starting PM2
+- Application will fail to start without this variable
+
+**`CORS_ORIGIN` — REQUIRED (for production)**
+- Comma-separated list of allowed frontend domains
+- Example: `https://tszck.github.io,https://example.com`
+- Prevents CORS errors when frontend calls backend API
+
+**If not set:** Application will fail to start with a clear error message.
 
 ---
 
@@ -176,7 +194,7 @@ pm2 start ecosystem.config.js
 
 **1. Configure environment**
 
-Copy `.env.example` to `.env` and update for production:
+Copy `.env.example` to `.env` and set **required environment variables**:
 
 ```bash
 cp backend/.env.example backend/.env
@@ -185,16 +203,20 @@ cp backend/.env.example backend/.env
 Edit `backend/.env`:
 
 ```env
-PORT=3000
+PORT=3001
 NODE_ENV=production
-DATABASE_URL=postgresql://xkx:password@your-actual-db:5432/xkx_game
 
-# CRITICAL: Set CORS_ORIGIN to your frontend domain
-# Multiple origins separated by comma
+# REQUIRED: Database connection (application will fail to start without this)
+DATABASE_URL=postgresql://xkx:ACTUAL_PASSWORD@your-db-host:5432/xkx_game
+
+# REQUIRED (production): Frontend domain for CORS
 CORS_ORIGIN=https://tszck.github.io,https://your-custom-domain.com
 ```
 
-> **CORS Fix:** Without `CORS_ORIGIN` configured, frontend requests from `https://tszck.github.io` will be blocked with "No 'Access-Control-Allow-Origin' header" error.
+**⚠️ IMPORTANT:**
+- Both `DATABASE_URL` and `CORS_ORIGIN` **must** be set explicitly
+- Application will not start if `DATABASE_URL` is missing (no hardcoded fallback for security)
+- Without `CORS_ORIGIN`, browser will reject API requests with CORS error
 
 **2. Build and start backend**
 
@@ -213,35 +235,48 @@ pm2 save && pm2 startup
 # Check status
 pm2 status
 pm2 logs xkx-backend
+```Caddy or Nginx)
+
+**Caddy Configuration:**
+
+The backend runs on `localhost:3001`. Configure Caddy:
+
+```caddy
+xkx.example.com {
+    reverse_proxy localhost:3001
+}
 ```
 
-If you see 502 errors from the reverse proxy (Nginx/Caddy), the backend service crashed. Check logs with `pm2 logs`.
+Reload: `caddy reload --config /etc/caddy/Caddyfile`
 
-### Reverse Proxy (Nginx or Caddy)
+**Nginx Configuration:**
 
-Copy `nginx.conf.example` to `/etc/nginx/sites-available/xkx` and update the domain name and SSL paths. The config proxies `/api/` and `/ws` to `localhost:3000`.
+Copy `nginx.conf.example` to `/etc/nginx/sites-available/xkx` (update domain/SSL paths). Proxies to `localhost:3001`.
 
 ```bash
-certbot --nginx -d your-domain.com   # free SSL via Let's Encrypt
+certbot --nginx -d your-domain.com
 nginx -t && systemctl reload nginx
 ```
 
 **Troubleshooting 502 Bad Gateway:**
 
-If browser shows "502 Bad Gateway" or CORS errors, the backend is not accepting connections:
-
 ```bash
-# Check if backend is running on port 3000
-netstat -tlnp | grep 3000
+# Check if backend is running on port 3001
+netstat -tlnp | grep 3001
 
-# If not running, start it
-cd /root/projects/xkx-web/backend
-pm2 start ecosystem.config.js
-
-# Check logs for errors
+# View backend status and logs
+pm2 status
 pm2 logs xkx-backend
 ```
 
+**Troubleshooting CORS errors:**
+
+- Verify `CORS_ORIGIN` is set in `backend/.env` and includes your frontend domain
+- Restart backend: `pm2 resta Notes |
+|---|---|---|
+| `VITE_WS_URL` | `wss://xkx.87.106.31.154.sslip.io/ws` | WebSocket via Caddy proxy |
+| `VITE_API_URL` | `https://xkx.87.106.31.154.sslip.io/api` | REST API via Caddy proxy |
+| `VITE_BASE_PATH` | `/` | GitHub Pages root path
 Make sure `backend/.env` has `CORS_ORIGIN` configured (see Backend section above).
 
 ### Frontend (GitHub Pages)
@@ -280,7 +315,23 @@ Game data lives in `backend/src/data/` as JSON. All domains have been imported, 
 | P4 — 道家名派 | `wudang`, `quanzhen`, `emei`, `qingcheng`, `taohua`, `kunlun` | ✅ Live (6/6 domains) |
 | P5–P10+ | All remaining domains (59+ total) | ✅ Live (all parsed & imported) |
 
-> **Content Rollout Complete!** All 86 parsed domains are now imported to the database and ready for gameplay. Players can freely explore across all regions. Quest scripting and story content development can now proceed in runtime.
+> **Content Rollout Complete!** ✅ All 86 parsed domains are now imported to the database and ready for gameplay. Players can freely explore across all regions. Quest scripting and story content development can now proceed in runtime.
+
+---
+
+## Current Status (2026-04-04)
+
+✅ **Production Deployment Active**
+- **Frontend:** https://tszck.github.io (React SPA on GitHub Pages)
+- **Backend:** https://xkx.87.106.31.154.sslip.io (Node.js + PostgreSQL on VPS)
+- **CORS:** Fully configured and working ✅
+- **Port:** Backend running on 3001 (no conflicts with DND on 3000)
+
+✅ **Recent Fixes**
+- Fixed Caddy reverse proxy (was routing to 3101, now 3001)
+- Fixed CORS_ORIGIN configuration in ecosystem.config.js
+- Secured environment variables (removed hardcoded credentials)
+- Archived development planning docs
 
 ---
 

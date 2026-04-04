@@ -1,5 +1,9 @@
 # Plan: xkx100 → Browser Single-Player Game
 
+> Archive notice (2026-04-04): This plan is archived at `docs/plans/archive/deployment_plan_2026-04-04.md`.
+> Active work planning has moved to `development_plan.md` with backend DB-first focus for movement/actions.
+> Execution note (2026-04-04): backend runtime schema Step 1 has been applied and validated (`005_world_runtime_apply.js`, 8 tables + 6 indexes).
+
 ## Context
 
 The existing xkx100 codebase is a FluffOS LPMUD — a multiplayer text game running LPC scripts on a custom driver. The goal is to convert it into a **browser-based single-player wuxia RPG** with:
