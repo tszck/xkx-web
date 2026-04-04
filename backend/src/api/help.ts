@@ -7,6 +7,11 @@ const router = Router()
 const RAW_XKX_DIR = process.env.RAW_XKX_DIR ?? '/root/projects/xkx'
 const TOPICS_FILE = path.join(RAW_XKX_DIR, 'help', 'help', 'topics')
 
+interface HelpTopicCatalogItem {
+  key: string
+  title: string
+}
+
 function stripAnsi(input: string): string {
   return input.replace(/\u001b\[[0-9;]*m/g, '')
 }
@@ -36,6 +41,26 @@ function escapeHtml(input: string): string {
     .replace(/'/g, '&#39;')
 }
 
+function parseCatalog(text: string): HelpTopicCatalogItem[] {
+  const out: HelpTopicCatalogItem[] = []
+  const seen = new Set<string>()
+  const regex = /〖\s*([^〗\s]+)\s*〗\s*([^│\n\r]+)/g
+
+  for (const line of text.split(/\r?\n/)) {
+    let m: RegExpExecArray | null
+    while ((m = regex.exec(line)) !== null) {
+      const key = m[1].trim()
+      const title = m[2].trim()
+      if (!key || !title || seen.has(key)) continue
+      seen.add(key)
+      out.push({ key, title })
+    }
+    regex.lastIndex = 0
+  }
+
+  return out
+}
+
 router.get('/topics', (_req: Request, res: Response) => {
   try {
     const raw = fs.readFileSync(TOPICS_FILE, 'utf-8')
@@ -50,6 +75,24 @@ router.get('/topics', (_req: Request, res: Response) => {
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : '讀取幫助文件失敗'
+    res.status(500).json({ error: message })
+  }
+})
+
+router.get('/catalog', (_req: Request, res: Response) => {
+  try {
+    const raw = fs.readFileSync(TOPICS_FILE, 'utf-8')
+    const text = toTraditionalChinese(stripAnsi(raw))
+    const topics = parseCatalog(text)
+    res.json({
+      title: '俠客行一百 幫助說明',
+      subtitle: '總覽主題索引',
+      topics,
+      count: topics.length,
+      updatedAt: new Date().toISOString(),
+    })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : '讀取幫助索引失敗'
     res.status(500).json({ error: message })
   }
 })
