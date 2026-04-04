@@ -8,6 +8,9 @@ export default function HelpModal() {
   const [title, setTitle] = useState('遊戲幫助')
   const [text, setText] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const helpPageUrl = (typeof window !== 'undefined' && window.location.pathname.startsWith('/xkx-web/'))
+    ? '/xkx-web/help.html'
+    : '/help.html'
 
   useEffect(() => {
     let alive = true
@@ -36,7 +39,7 @@ export default function HelpModal() {
         <div className="box-title" style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
           <span>{title}</span>
           <div style={{ display:'flex', gap:8 }}>
-            <a href="/help.html" target="_blank" rel="noreferrer" style={{ color:'var(--accent)', fontSize:12, textDecoration:'none' }}>獨立頁面</a>
+            <a href={helpPageUrl} target="_blank" rel="noreferrer" style={{ color:'var(--accent)', fontSize:12, textDecoration:'none' }}>獨立頁面</a>
             <button onClick={() => setHelpModal(false)}>關閉</button>
           </div>
         </div>
