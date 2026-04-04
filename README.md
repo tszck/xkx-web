@@ -146,16 +146,50 @@ All messages are JSON with a `type` field.
 
 ### Backend (VPS)
 
+**1. Configure environment**
+
+Copy `.env.example` to `.env` and update for production:
+
+```bash
+cp backend/.env.example backend/.env
+```
+
+Edit `backend/.env`:
+
+```env
+PORT=3000
+NODE_ENV=production
+DATABASE_URL=postgresql://xkx:password@your-actual-db:5432/xkx_game
+
+# CRITICAL: Set CORS_ORIGIN to your frontend domain
+# Multiple origins separated by comma
+CORS_ORIGIN=https://tszck.github.io,https://your-custom-domain.com
+```
+
+> **CORS Fix:** Without `CORS_ORIGIN` configured, frontend requests from `https://tszck.github.io` will be blocked with "No 'Access-Control-Allow-Origin' header" error.
+
+**2. Build and start backend**
+
 ```bash
 # Build
 cd backend && npm run build
 
-# Start with PM2
+# Start with PM2 (ensures auto-restart on crash/reboot)
 pm2 start ecosystem.config.js
 pm2 save && pm2 startup
 ```
 
-### Nginx
+**3. Verify backend is running**
+
+```bash
+# Check status
+pm2 status
+pm2 logs xkx-backend
+```
+
+If you see 502 errors from the reverse proxy (Nginx/Caddy), the backend service crashed. Check logs with `pm2 logs`.
+
+### Reverse Proxy (Nginx or Caddy)
 
 Copy `nginx.conf.example` to `/etc/nginx/sites-available/xkx` and update the domain name and SSL paths. The config proxies `/api/` and `/ws` to `localhost:3000`.
 
@@ -163,6 +197,24 @@ Copy `nginx.conf.example` to `/etc/nginx/sites-available/xkx` and update the dom
 certbot --nginx -d your-domain.com   # free SSL via Let's Encrypt
 nginx -t && systemctl reload nginx
 ```
+
+**Troubleshooting 502 Bad Gateway:**
+
+If browser shows "502 Bad Gateway" or CORS errors, the backend is not accepting connections:
+
+```bash
+# Check if backend is running on port 3000
+netstat -tlnp | grep 3000
+
+# If not running, start it
+cd /root/projects/xkx-web/backend
+pm2 start ecosystem.config.js
+
+# Check logs for errors
+pm2 logs xkx-backend
+```
+
+Make sure `backend/.env` has `CORS_ORIGIN` configured (see Backend section above).
 
 ### Frontend (GitHub Pages)
 
